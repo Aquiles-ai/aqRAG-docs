@@ -36,62 +36,53 @@ function setActiveNav(docName) {
 }
 
 function loadMarkdown(filename) {
-    const contentElement = document.getElementById('content');
-    contentElement.innerHTML = '<div class="loading">Loading documentation...</div>';
+  const contentElement = document.getElementById('content');
+  contentElement.innerHTML = '<div class="loading">Loading documentation...</div>';
 
-    fetch(`docs/${filename}.md`)
-        .then(resp => {
-            if (!resp.ok) throw new Error('Failed to load file');
-            return resp.text();
-        })
-        .then(md => {
-            // Configuración de marked con highlight usando Prism
-            marked.setOptions({
-                gfm: true,
-                breaks: true,
-                highlight: function(code, lang) {
-                    if (Prism.languages[lang]) {
-                        return Prism.highlight(code, Prism.languages[lang], lang);
-                    }
-                    return code;
-                }
-            });
+  // Ahora fetch con ruta absoluta
+  fetch(`/docs/${filename}.md`)
+    .then(resp => {
+      if (!resp.ok) throw new Error('Failed to load file');
+      return resp.text();
+    })
+    .then(md => {
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+        highlight: function(code, lang) {
+          if (Prism.languages[lang]) {
+            return Prism.highlight(code, Prism.languages[lang], lang);
+          }
+          return code;
+        }
+      });
 
-            // 1. Renderizar MD
-            contentElement.innerHTML = marked.parse(md);
+      contentElement.innerHTML = marked.parse(md);
 
-            // 2. Añadir enlaces a TODOS los headers h1-h6
-            contentElement.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((hdr, i) => {
-                // Generar id a partir del texto si no existe
-                if (!hdr.id) {
-                    hdr.id = hdr.textContent
-                               .trim()
-                               .toLowerCase()
-                               .replace(/\s+/g, '-')
-                               .replace(/[^\w\-]/g, '');
-                }
-                // Crear el ancla
-                const a = document.createElement('a');
-                a.className = 'header-anchor';
-                a.href = `#${hdr.id}`;
-                a.innerHTML = '🔗';  // puedes cambiar por un SVG si prefieres
-                // Insertar al inicio del header
-                hdr.prepend(a);
-            });
+      contentElement.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((hdr, i) => {
+        if (!hdr.id) {
+          hdr.id = hdr.textContent.trim()
+                         .toLowerCase()
+                         .replace(/\s+/g, '-')
+                         .replace(/[^\w\-]/g, '');
+        }
+        const a = document.createElement('a');
+        a.className = 'header-anchor';
+        a.href = `#${hdr.id}`;
+        a.innerHTML = '🔗';
+        hdr.prepend(a);
+      });
 
-            // 3. Generar la navegación lateral (h1–h3)
-            generatePageNav();
-
-            // 4. Resaltar sintaxis
-            if (window.Prism) Prism.highlightAllUnder(contentElement);
-        })
-        .catch(err => {
-            contentElement.innerHTML = `
-                <div class="error">
-                    <h2>Error loading documentation</h2>
-                    <p>${err.message}</p>
-                </div>`;
-        });
+      generatePageNav();
+      if (window.Prism) Prism.highlightAllUnder(contentElement);
+    })
+    .catch(err => {
+      contentElement.innerHTML = `
+        <div class="error">
+          <h2>Error loading documentation</h2>
+          <p>${err.message}</p>
+        </div>`;
+    });
 }
 
 function generatePageNav() {

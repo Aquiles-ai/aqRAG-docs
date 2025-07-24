@@ -1,38 +1,30 @@
-const pathParts = window.location.pathname.split('/');
-const basePath = pathParts[1]
-  ? '/' + pathParts[1] + '/'
-  : '/';
-
-let currentDoc = 'index';
-
 document.addEventListener('DOMContentLoaded', () => {
-  // Determina el documento inicial (quita el basePath)
-  currentDoc = window.location.pathname.slice(basePath.length) || 'index';
-  loadMarkdown(currentDoc);
-  setActiveNav(currentDoc);
+  // Carga inicial según el hash (o 'index')
+  handleHashChange();
 
-  // Captura clicks en la navbar y menú móvil
-  document.querySelectorAll('.nav-link, .mobile-menu-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      if (this.target === '_blank') return;
-      e.preventDefault();
-
-      currentDoc = this.dataset.doc;
-      loadMarkdown(currentDoc);
-      history.pushState({ doc: currentDoc }, '', basePath + currentDoc);
-      setActiveNav(currentDoc);
-    });
-  });
-
-  // Maneja back/forward del navegador
-  window.addEventListener('popstate', e => {
-    currentDoc = (e.state && e.state.doc)
-               || window.location.pathname.slice(basePath.length)
-               || 'index';
-    loadMarkdown(currentDoc);
-    setActiveNav(currentDoc);
-  });
+  // Maneja cambios de hash
+  window.addEventListener('hashchange', handleHashChange);
 });
+
+function handleHashChange() {
+  // Ejemplos de hash:
+  //   "#/api"               → doc = "api",     anchor = null
+  //   "#/api/mi‑encabezado" → doc = "api",     anchor = "mi‑encabezado"
+  //   "#"                   → doc = "index",   anchor = null
+  let hash = window.location.hash.slice(1); // quita '#'
+  if (!hash) hash = '/index';
+  const parts = hash.split('/');
+  const doc = parts[1] || 'index';
+  const anchor = parts[2] || null;
+
+  loadMarkdown(doc).then(() => {
+    setActiveNav(doc);
+    if (anchor) {
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+}
 
 function setActiveNav(docName) {
   document.querySelectorAll('.nav-link').forEach(a =>
@@ -40,68 +32,60 @@ function setActiveNav(docName) {
   );
 }
 
-function loadMarkdown(filename) {
+async function loadMarkdown(filename) {
   const content = document.getElementById('content');
   content.innerHTML = '<div class="loading">Loading documentation...</div>';
 
-  fetch(`${basePath}docs/${filename}.md`)
-    .then(r => {
-      if (!r.ok) throw new Error('Failed to load file');
-      return r.text();
-    })
-    .then(md => {
-      // Configurar marked + prism
-      marked.setOptions({
-        gfm: true,
-        breaks: true,
-        highlight: (code, lang) =>
-          Prism.languages[lang]
-            ? Prism.highlight(code, Prism.languages[lang], lang)
-            : code
-      });
+  try {
+    const resp = await fetch(`docs/${filename}.md`);
+    if (!resp.ok) throw new Error('Failed to load file');
+    const md = await resp.text();
 
-      content.innerHTML = marked.parse(md);
-
-      // Añadir ancla con listener para cada header
-      content.querySelectorAll('h1, h2, h3, h4, h5, h6')
-        .forEach(hdr => {
-          if (!hdr.id) {
-            hdr.id = hdr.textContent
-                       .trim()
-                       .toLowerCase()
-                       .replace(/\s+/g, '-')
-                       .replace(/[^\w\-]/g, '');
-          }
-          const a = document.createElement('a');
-          a.className = 'header-anchor';
-          a.href = `#${hdr.id}`;
-          a.innerHTML = '🔗';
-          a.addEventListener('click', e => {
-            e.preventDefault();
-            hdr.scrollIntoView({ behavior: 'smooth' });
-            // Actualiza solo el hash en la URL sin recargar
-            history.replaceState(history.state, '', basePath + filename + '#' + hdr.id);
-          });
-          hdr.prepend(a);
-        });
-
-      generatePageNav();
-      if (window.Prism) Prism.highlightAllUnder(content);
-    })
-    .catch(err => {
-      content.innerHTML = `
-        <div class="error">
-          <h2>Error loading documentation</h2>
-          <p>${err.message}</p>
-        </div>`;
+    // Configurar marked
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      highlight: (code, lang) =>
+        Prism.languages[lang]
+          ? Prism.highlight(code, Prism.languages[lang], lang)
+          : code
     });
+
+    // Renderiza MD
+    content.innerHTML = marked.parse(md);
+
+    // Añade anclas a headers y actualiza sus hrefs
+    content.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(hdr => {
+      if (!hdr.id) {
+        hdr.id = hdr.textContent
+                   .trim()
+                   .toLowerCase()
+                   .replace(/\s+/g, '-')
+                   .replace(/[^\w\-]/g, '');
+      }
+      // href debe ser "#/{doc}/{hdr.id}"
+      const a = document.createElement('a');
+      a.className = 'header-anchor';
+      a.href = `#/${filename}/${hdr.id}`;
+      a.innerHTML = '🔗';
+      hdr.prepend(a);
+    });
+
+    generatePageNav(filename);
+    Prism.highlightAllUnder(content);
+  } catch (err) {
+    content.innerHTML = `
+      <div class="error">
+        <h2>Error loading documentation</h2>
+        <p>${err.message}</p>
+      </div>`;
+  }
 }
 
-function generatePageNav() {
+function generatePageNav(currentDoc) {
   const nav = document.getElementById('page-nav-links');
   nav.innerHTML = '';
   const headings = document.querySelectorAll('#content h1, #content h2, #content h3');
-
   if (!headings.length) {
     document.querySelector('.page-nav').style.display = 'none';
     return;
@@ -109,9 +93,10 @@ function generatePageNav() {
   document.querySelector('.page-nav').style.display = 'block';
 
   headings.forEach((h, idx) => {
-    if (!h.id) h.id = 'heading-' + idx;
+    const id = h.id || ('heading-' + idx);
+    h.id = id;
     const link = document.createElement('a');
-    link.href = '#' + h.id;
+    link.href = `#/${currentDoc}/${id}`;
     link.textContent = h.textContent;
     link.className = 'page-nav-link';
     if (h.tagName === 'H3') {
@@ -119,24 +104,10 @@ function generatePageNav() {
       link.style.fontSize = '0.85rem';
     }
     link.addEventListener('click', e => {
+      // El hashchange se encargará de todo
       e.preventDefault();
-      h.scrollIntoView({ behavior: 'smooth' });
-      document.querySelectorAll('.page-nav-link').forEach(a => a.classList.remove('active'));
-      link.classList.add('active');
+      window.location.hash = `/${currentDoc}/${id}`;
     });
     nav.appendChild(link);
   });
-
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.id;
-        document.querySelectorAll('.page-nav-link').forEach(a =>
-          a.classList.toggle('active', a.getAttribute('href') === '#' + id)
-        );
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '-20% 0px -80% 0px' });
-
-  headings.forEach(h => obs.observe(h));
 }

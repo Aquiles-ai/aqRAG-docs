@@ -3,32 +3,34 @@ const basePath = pathParts[1]
   ? '/' + pathParts[1] + '/'
   : '/';
 
+let currentDoc = 'index';
+
 document.addEventListener('DOMContentLoaded', () => {
   // Determina el documento inicial (quita el basePath)
-  const initialPath = window.location.pathname.slice(basePath.length) || 'index';
-  loadMarkdown(initialPath);
-  setActiveNav(initialPath);
+  currentDoc = window.location.pathname.slice(basePath.length) || 'index';
+  loadMarkdown(currentDoc);
+  setActiveNav(currentDoc);
 
   // Captura clicks en la navbar y menú móvil
   document.querySelectorAll('.nav-link, .mobile-menu-link').forEach(link => {
     link.addEventListener('click', function(e) {
-      if (this.target === '_blank') return;  // enlaces externos
+      if (this.target === '_blank') return;
       e.preventDefault();
 
-      const docName = this.dataset.doc;
-      loadMarkdown(docName);
-      history.pushState({ doc: docName }, '', basePath + docName);
-      setActiveNav(docName);
+      currentDoc = this.dataset.doc;
+      loadMarkdown(currentDoc);
+      history.pushState({ doc: currentDoc }, '', basePath + currentDoc);
+      setActiveNav(currentDoc);
     });
   });
 
   // Maneja back/forward del navegador
   window.addEventListener('popstate', e => {
-    const docName = (e.state && e.state.doc)
-                  || window.location.pathname.slice(basePath.length)
-                  || 'index';
-    loadMarkdown(docName);
-    setActiveNav(docName);
+    currentDoc = (e.state && e.state.doc)
+               || window.location.pathname.slice(basePath.length)
+               || 'index';
+    loadMarkdown(currentDoc);
+    setActiveNav(currentDoc);
   });
 });
 
@@ -42,14 +44,13 @@ function loadMarkdown(filename) {
   const content = document.getElementById('content');
   content.innerHTML = '<div class="loading">Loading documentation...</div>';
 
-  // Fetch apuntando al subdirectorio correcto
   fetch(`${basePath}docs/${filename}.md`)
-    .then(resp => {
-      if (!resp.ok) throw new Error('Failed to load file');
-      return resp.text();
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to load file');
+      return r.text();
     })
     .then(md => {
-      // Configuración de marked con Prism
+      // Configurar marked + prism
       marked.setOptions({
         gfm: true,
         breaks: true,
@@ -59,24 +60,30 @@ function loadMarkdown(filename) {
             : code
       });
 
-      // Renderiza Markdown
       content.innerHTML = marked.parse(md);
 
-      // Añade ancla a cada header h1–h6
-      content.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(hdr => {
-        if (!hdr.id) {
-          hdr.id = hdr.textContent
-                     .trim()
-                     .toLowerCase()
-                     .replace(/\s+/g, '-')
-                     .replace(/[^\w\-]/g, '');
-        }
-        const a = document.createElement('a');
-        a.className = 'header-anchor';
-        a.href = `#${hdr.id}`;
-        a.innerHTML = '🔗';
-        hdr.prepend(a);
-      });
+      // Añadir ancla con listener para cada header
+      content.querySelectorAll('h1, h2, h3, h4, h5, h6')
+        .forEach(hdr => {
+          if (!hdr.id) {
+            hdr.id = hdr.textContent
+                       .trim()
+                       .toLowerCase()
+                       .replace(/\s+/g, '-')
+                       .replace(/[^\w\-]/g, '');
+          }
+          const a = document.createElement('a');
+          a.className = 'header-anchor';
+          a.href = `#${hdr.id}`;
+          a.innerHTML = '🔗';
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            hdr.scrollIntoView({ behavior: 'smooth' });
+            // Actualiza solo el hash en la URL sin recargar
+            history.replaceState(history.state, '', basePath + filename + '#' + hdr.id);
+          });
+          hdr.prepend(a);
+        });
 
       generatePageNav();
       if (window.Prism) Prism.highlightAllUnder(content);

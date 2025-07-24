@@ -84,7 +84,7 @@ function setupEventListeners() {
 // Load and index all documentation content
 function loadAllDocuments() {
   // List of all documentation files
-  const docFiles = ['index', 'installation', 'api', 'frameworks'];
+  const docFiles = ['index', 'installation', 'api', 'deploy', 'client'];
   
   // Load each document and add to search index
   docFiles.forEach(filename => {

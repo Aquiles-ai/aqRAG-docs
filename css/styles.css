@@ -455,3 +455,12 @@ footer {
         width: calc(100% - 2rem);
     }
 }
+
+.header-anchor {
+  margin-right: 0.5rem;
+  text-decoration: none;
+  opacity: 0.6;
+}
+.header-anchor:hover {
+  opacity: 1;
+}

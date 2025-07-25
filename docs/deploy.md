@@ -4,7 +4,7 @@ Use this guide to deploy Aquiles‑RAG to a cloud provider (e.g. Render) with mi
 
 ```
 requirements.txt
-test\deploy.py
+test_deploy.py
 ```
 
 ## 1. Repository Structure

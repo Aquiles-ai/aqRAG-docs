@@ -171,7 +171,7 @@ Aquiles‑RAG’s `get_connection()` logic supports four modes:
 1. **Verify connection** by launching Aquiles‑RAG:
 
    ```bash
-   aquiles-rag serve --host 0.0.0.0 --port 5500
+   aquiles-rag serve --host "0.0.0.0" --port 5500
    ```
 2. **Check logs** for successful Redis handshake and index-info calls.
 3. **Open the UI** at `http://localhost:5500/ui` and confirm you can list indices.

@@ -15,7 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -90,10 +89,6 @@
             background: #f5f5f5;
         }
 
-        .dark ::-webkit-scrollbar-track {
-            background: #374151;
-        }
-
         ::-webkit-scrollbar-thumb {
             background: #8b5cf6;
             border-radius: 4px;
@@ -135,19 +130,10 @@
             border: 1px solid #e5e7eb;
         }
 
-        .dark .search-modal-content {
-            background-color: #1f2937;
-            border-color: #374151;
-        }
-
         .search-header {
             display: flex;
             border-bottom: 1px solid #e5e7eb;
             padding: 1rem;
-        }
-
-        .dark .search-header {
-            border-bottom-color: #374151;
         }
 
         .search-modal-input {
@@ -158,10 +144,6 @@
             font-size: 1.1rem;
             outline: none;
             font-family: 'Inter', sans-serif;
-        }
-
-        .dark .search-modal-input {
-            color: #f9fafb;
         }
 
         .search-close-btn {
@@ -184,15 +166,6 @@
             color: #111827;
         }
 
-        .dark .search-close-btn {
-            color: #9ca3af;
-        }
-
-        .dark .search-close-btn:hover {
-            background-color: #374151;
-            color: #f9fafb;
-        }
-
         .search-results {
             overflow-y: auto;
             max-height: calc(80vh - 60px);
@@ -206,10 +179,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        .dark .search-empty {
-            color: #9ca3af;
-        }
-
         .search-result-item {
             padding: 1rem;
             border-bottom: 1px solid #e5e7eb;
@@ -221,23 +190,11 @@
             background-color: #f9fafb;
         }
 
-        .dark .search-result-item {
-            border-bottom-color: #374151;
-        }
-
-        .dark .search-result-item:hover {
-            background-color: #374151;
-        }
-
         .search-result-title {
             font-weight: 600;
             margin-bottom: 0.5rem;
             font-family: 'Lora', serif;
             color: #111827;
-        }
-
-        .dark .search-result-title {
-            color: #f9fafb;
         }
 
         .search-result-context {
@@ -247,20 +204,11 @@
             font-family: 'Inter', sans-serif;
         }
 
-        .dark .search-result-context {
-            color: #9ca3af;
-        }
-
         .search-highlight {
             background-color: rgba(139, 92, 246, 0.2);
             color: #7c3aed;
             padding: 0 2px;
             border-radius: 2px;
-        }
-
-        .dark .search-highlight {
-            background-color: rgba(139, 92, 246, 0.3);
-            color: #a855f7;
         }
 
         /* Content styles */
@@ -273,10 +221,6 @@
             line-height: 1.2;
         }
 
-        .dark .content h1 {
-            color: #f9fafb;
-        }
-
         .content h2 {
             font-family: 'Lora', serif;
             font-size: 2rem;
@@ -285,10 +229,6 @@
             margin-top: 2rem;
             margin-bottom: 1rem;
             line-height: 1.3;
-        }
-
-        .dark .content h2 {
-            color: #f9fafb;
         }
 
         .content h3 {
@@ -301,20 +241,12 @@
             line-height: 1.4;
         }
 
-        .dark .content h3 {
-            color: #f9fafb;
-        }
-
         .content p {
             font-family: 'Inter', sans-serif;
             font-size: 1rem;
             line-height: 1.7;
             color: #374151;
             margin-bottom: 1rem;
-        }
-
-        .dark .content p {
-            color: #d1d5db;
         }
 
         .content code {
@@ -324,11 +256,6 @@
             border-radius: 0.25rem;
             font-size: 0.875rem;
             color: #7c3aed;
-        }
-
-        .dark .content code {
-            background-color: #374151;
-            color: #a855f7;
         }
 
         .content pre {
@@ -357,20 +284,12 @@
             line-height: 1.6;
         }
 
-        .dark .content li {
-            color: #d1d5db;
-        }
-
         .content blockquote {
             border-left: 4px solid #8b5cf6;
             background-color: #f8fafc;
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 0.5rem 0.5rem 0;
-        }
-
-        .dark .content blockquote {
-            background-color: #374151;
         }
 
         .content table {
@@ -386,23 +305,10 @@
             text-align: left;
         }
 
-        .dark .content th, .dark .content td {
-            border-color: #4b5563;
-        }
-
         .content th {
             background-color: #f9fafb;
             font-weight: 600;
             color: #111827;
-        }
-
-        .dark .content th {
-            background-color: #374151;
-            color: #f9fafb;
-        }
-
-        .dark .content td {
-            color: #d1d5db;
         }
 
         .loading {
@@ -412,10 +318,6 @@
             padding: 4rem;
             color: #6b7280;
             font-family: 'Inter', sans-serif;
-        }
-
-        .dark .loading {
-            color: #9ca3af;
         }
 
         .error {
@@ -430,18 +332,10 @@
             color: #dc2626;
             margin-bottom: 1rem;
         }
-
-        .dark .error {
-            color: #f87171;
-        }
-
-        .dark .error h2 {
-            color: #f87171;
-        }
     </style>
 </head>
 
-<body class="bg-cream-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen overflow-x-hidden font-inter transition-colors duration-300">
+<body class="bg-cream-50 text-gray-900 min-h-screen overflow-x-hidden font-inter">
     <!-- Background Effects -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float"></div>
@@ -450,22 +344,22 @@
     </div>
 
     <!-- Header -->
-    <header class="relative z-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 transition-colors duration-300">
+    <header class="relative z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center space-x-4">
-                    <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Toggle mobile menu">
+                    <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Toggle mobile menu">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
-                    
+
                     <a href="#" class="flex items-center space-x-2 animate-float">
                         <img src="static/aq-fav.png" alt="Aquiles-RAG" class="w-8 h-8 rounded-lg">
                         <div>
                             <h1 class="text-xl font-bold font-lora">
-                                <span class="text-gray-900 dark:text-gray-100">Aquiles</span><span class="text-purple-600">-RAG</span>
+                                <span class="text-gray-900">Aquiles</span><span class="text-purple-600">-RAG</span>
                             </h1>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 font-inter">Documentation</p>
+                            <p class="text-xs text-gray-500 font-inter">Documentation</p>
                         </div>
                     </a>
                 </div>
@@ -473,20 +367,14 @@
                 <!-- Search -->
                 <div class="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
                     <div class="relative w-full">
-                        <input type="text" placeholder="Search documentation..." class="search-input w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter text-sm text-gray-900 dark:text-gray-100">
-                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded font-mono">Ctrl K</span>
+                        <input type="text" placeholder="Search documentation..." class="search-input w-full px-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter text-sm">
+                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">Ctrl K</span>
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex items-center space-x-4">
-                    <!-- Dark mode toggle -->
-                    <button id="theme-toggle" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Toggle dark mode">
-                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                    </button>
-                    
-                    <a href="https://github.com/Aquiles-ai" target="_blank" class="hidden md:flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-inter font-medium">
+                    <a href="https://github.com/Aquiles-ai" target="_blank" class="hidden md:flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors font-inter font-medium">
                         <i data-lucide="github" class="w-4 h-4"></i>
                         <span>GitHub</span>
                     </a>
@@ -497,40 +385,40 @@
 
     <!-- Mobile menu overlay -->
     <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden">
-        <div class="fixed inset-y-0 left-0 w-80 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-r border-gray-200 dark:border-gray-700 overflow-y-auto animate-slide-down transition-colors duration-300">
+        <div class="fixed inset-y-0 left-0 w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200 overflow-y-auto animate-slide-down">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold font-lora text-gray-900 dark:text-gray-100">Navigation</h2>
-                    <button id="close-menu-button" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Close mobile menu">
+                    <h2 class="text-xl font-bold font-lora text-gray-900">Navigation</h2>
+                    <button id="close-menu-button" class="p-2 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Close mobile menu">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
                 
                 <div class="space-y-6">
                     <div>
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Guides</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter" data-doc="index">Introduction</a>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter" data-doc="installation">Installation</a>
+                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Guides</div>
+                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="index">Introduction</a>
+                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="installation">Installation</a>
                     </div>
                     
                     <div>
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">API Reference</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter" data-doc="api">API</a>
+                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Reference</div>
+                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="api">API</a>
                     </div>
                     
                     <div>
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Deploy</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter" data-doc="deploy">Deploy</a>
+                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Deploy</div>
+                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="deploy">Deploy</a>
                     </div>
                     
                     <div>
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">API Client</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter" data-doc="client">Aquiles-RAG Client - Py</a>
+                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Client</div>
+                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="client">Aquiles-RAG Client - Py</a>
                     </div>
                     
                     <div>
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Community</div>
-                        <a href="https://github.com/Aquiles-ai" target="_blank" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-400 transition-colors font-inter">GitHub</a>
+                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Community</div>
+                        <a href="https://github.com/Aquiles-ai" target="_blank" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter">GitHub</a>
                     </div>
                 </div>
             </div>
@@ -539,31 +427,31 @@
 
     <div class="flex">
         <!-- Sidebar -->
-        <nav class="hidden lg:block w-80 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-r border-gray-200 dark:border-gray-700 fixed h-full overflow-y-auto transition-colors duration-300" style="top: 64px;">
+        <nav class="hidden lg:block w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200 fixed h-full overflow-y-auto" style="top: 64px;">
             <div class="p-6 space-y-6">
                 <div>
-                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Guides</div>
+                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Guides</div>
                     <a href="#" class="nav-link active block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="index">Introduction</a>
                     <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="installation">Installation</a>
                 </div>
                 
                 <div>
-                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">API Reference</div>
+                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Reference</div>
                     <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="api">API</a>
                 </div>
                 
                 <div>
-                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Deploy Aquiles-RAG</div>
+                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Deploy Aquiles-RAG</div>
                     <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="deploy">Deploy</a>
                 </div>
                 
                 <div>
-                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">API Client</div>
+                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Client</div>
                     <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="client">Aquiles-RAG Client - Py</a>
                 </div>
                 
                 <div>
-                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 font-inter">Community</div>
+                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Community</div>
                     <a href="https://github.com/Aquiles-ai" target="_blank" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter">GitHub</a>
                 </div>
             </div>
@@ -573,7 +461,7 @@
         <main class="flex-1">
             <div class="lg:ml-80 xl:mr-64">
                 <div class="max-w-4xl mx-auto px-6 py-8">
-                    <div id="content" class="content bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 lg:p-12 transition-colors duration-300">
+                    <div id="content" class="content bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 lg:p-12">
                         <div class="loading">Loading documentation...</div>
                     </div>
                 </div>
@@ -581,9 +469,9 @@
         </main>
 
         <!-- Page Navigation -->
-        <aside class="page-nav hidden xl:block w-64 fixed right-0 h-full overflow-y-auto bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-l border-gray-200 dark:border-gray-700 transition-colors duration-300" style="top: 64px;">
+        <aside class="page-nav hidden xl:block w-64 fixed right-0 h-full overflow-y-auto bg-white/50 backdrop-blur-sm border-l border-gray-200" style="top: 64px;">
             <div class="p-6">
-                <div class="page-nav-header text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 font-inter">On this page</div>
+                <div class="page-nav-header text-sm font-medium text-gray-500 mb-4 font-inter">On this page</div>
                 <div id="page-nav-links" class="space-y-2">
                     <!-- Page navigation links will be generated here -->
                 </div>
@@ -592,18 +480,18 @@
     </div>
 
     <!-- Footer -->
-    <footer class="relative z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 mt-16 transition-colors duration-300">
+    <footer class="relative z-10 bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-16">
         <div class="lg:ml-80 xl:mr-64">
             <div class="max-w-4xl mx-auto px-6 py-8">
                 <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8">
-                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" rel="noopener noreferrer" class="group flex items-center space-x-3 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300">
+                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" rel="noopener noreferrer" class="group flex items-center space-x-3 text-gray-600 hover:text-purple-600 transition-colors duration-300">
                         <i data-lucide="github" class="w-5 h-5 group-hover:scale-110 transition-transform duration-300"></i>
                         <span class="font-inter font-medium">Aquiles-RAG</span>
                     </a>
                 </div>
                 <div class="text-center mt-6">
-                    <p class="font-bold font-lora text-gray-900 dark:text-gray-100 mb-2">Aquiles-RAG <span class="text-purple-600">Documentation</span></p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 font-inter">Powerful Retrieval-Augmented Generation system</p>
+                    <p class="font-bold font-lora text-gray-900 mb-2">Aquiles-RAG <span class="text-purple-600">Documentation</span></p>
+                    <p class="text-sm text-gray-500 font-inter">Powerful Retrieval-Augmented Generation system</p>
                 </div>
             </div>
         </div>
@@ -615,47 +503,15 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Dark mode functionality
-        function initTheme() {
-            // Check for saved theme preference or default to 'light'
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            const html = document.documentElement;
-            
-            if (savedTheme === 'dark') {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.contains('dark');
-            
-            if (isDark) {
-                html.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // Initialize theme on page load
-        initTheme();
-
-        // Theme toggle button
-        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
         // Add active state styles
         document.addEventListener('DOMContentLoaded', function() {
             // Style nav links
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
                 if (!link.classList.contains('active')) {
-                    link.classList.add('text-gray-700', 'dark:text-gray-300', 'hover:bg-purple-50', 'dark:hover:bg-purple-900/20', 'hover:text-purple-700', 'dark:hover:text-purple-400');
+                    link.classList.add('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
                 } else {
-                    link.classList.add('bg-purple-100', 'dark:bg-purple-900/30', 'text-purple-700', 'dark:text-purple-400', 'font-medium');
+                    link.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
                 }
             });
 
@@ -664,20 +520,20 @@
                 link.addEventListener('click', function() {
                     // Remove active from all
                     navLinks.forEach(l => {
-                        l.classList.remove('bg-purple-100', 'dark:bg-purple-900/30', 'text-purple-700', 'dark:text-purple-400', 'font-medium');
-                        l.classList.add('text-gray-700', 'dark:text-gray-300', 'hover:bg-purple-50', 'dark:hover:bg-purple-900/20', 'hover:text-purple-700', 'dark:hover:text-purple-400');
+                        l.classList.remove('bg-purple-100', 'text-purple-700', 'font-medium');
+                        l.classList.add('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
                     });
                     
                     // Add active to clicked
-                    this.classList.remove('text-gray-700', 'dark:text-gray-300', 'hover:bg-purple-50', 'dark:hover:bg-purple-900/20', 'hover:text-purple-700', 'dark:hover:text-purple-400');
-                    this.classList.add('bg-purple-100', 'dark:bg-purple-900/30', 'text-purple-700', 'dark:text-purple-400', 'font-medium');
+                    this.classList.remove('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
+                    this.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
                 });
             });
 
             // Page nav link styles
             const pageNavLinks = document.querySelectorAll('.page-nav-link');
             pageNavLinks.forEach(link => {
-                link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'dark:text-gray-400', 'hover:text-purple-600', 'dark:hover:text-purple-400', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300', 'dark:hover:border-purple-500');
+                link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'hover:text-purple-600', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300');
             });
         });
 
@@ -753,12 +609,12 @@
                         // Style new page nav links
                         const pageNavLinks = document.querySelectorAll('.page-nav-link');
                         pageNavLinks.forEach(link => {
-                            link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'dark:text-gray-400', 'hover:text-purple-600', 'dark:hover:text-purple-400', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300', 'dark:hover:border-purple-500');
+                            link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'hover:text-purple-600', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300');
                             
                             // Active state
                             if (link.classList.contains('active')) {
-                                link.classList.add('text-purple-600', 'dark:text-purple-400', 'border-purple-500', 'font-medium');
-                                link.classList.remove('text-gray-600', 'dark:text-gray-400', 'border-transparent');
+                                link.classList.add('text-purple-600', 'border-purple-500', 'font-medium');
+                                link.classList.remove('text-gray-600', 'border-transparent');
                             }
                         });
                     }

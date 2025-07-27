@@ -65,7 +65,7 @@ def run():
 4. **Start Command**:
 
    ```bash
-   aquiles-rag deploy --host "0.0.0.0" --port 5500 test_deploy.py
+   aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 test_deploy.py
    ```
 
    * This will:

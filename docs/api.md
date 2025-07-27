@@ -135,6 +135,44 @@ Retrieve the top‐K most similar chunks by cosine similarity.
 
   * `500 Internal Server Error` if search fails
 
+## Monitoring & Status Endpoints
+
+### GET `/status/ram`
+
+Return JSON with both Redis memory stats and FastAPI process metrics.
+
+* **Response Body** (JSON):
+
+  ```json
+  {
+    "redis": {
+      "memory_info": { /* raw output of `INFO memory` */ },
+      "memory_stats": { /* output of `memory_stats()` */ },
+      "free_memory_mb": <float|null>
+    },
+    "app_process": {
+      "process_memory_mb": <float>,
+      "process_cpu_percent": <float>
+    }
+  }
+  ```
+
+* **Errors**
+
+  * If Redis metrics cannot be retrieved, `"redis"` will contain:
+
+    ```json
+    { "error": "Failed to get Redis metrics: <error message>" }
+    ```
+
+### GET `/status`
+
+Return an HTML status page (e.g. via Jinja2 template `status.html`).
+
+* **Response**
+
+  * `200 OK` with rendered HTML showing health/metrics.
+
 ## UI Configuration (Protected)
 
 These endpoints power the `/ui` playground and require the user to be authenticated via the `access_token` cookie (set by `/token`). They are not typically used by production clients, but are documented here for completeness.

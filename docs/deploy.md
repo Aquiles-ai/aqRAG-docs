@@ -9,6 +9,8 @@ test_deploy.py
 
 ## 1. Repository Structure
 
+> **Example repo:** https://github.com/Aquiles-ai/aquiles-example-deploy
+
 - **requirements.txt**  
 ```
 FastAPI

@@ -135,6 +135,37 @@ Retrieve the top‐K most similar chunks by cosine similarity.
 
   * `500 Internal Server Error` if search fails
 
+## Index Management
+
+### POST `/rag/drop_index`
+
+Remove an existing Redis search index, optionally deleting all its documents.
+
+* **Headers**
+
+  * `X-API-Key: <your_api_key>`
+
+* **Request Body** (JSON; fields from `DropIndex` model):
+
+  | Field         | Type      | Default | Description                                                     |
+  | ------------- | --------- | ------- | --------------------------------------------------------------- |
+  | `index_name`  | `string`  | *n/a*   | Name of the Redis index to drop.                                |
+  | `delete_docs` | `boolean` | `false` | If `true`, also removes every document contained in that index. |
+
+* **Success Response**
+
+  ```json
+  {
+    "status": "<OK|…>",
+    "drop-index": "<index_name>"
+  }
+  ```
+
+* **Errors**
+
+  * `500 Internal Server Error` if the Redis `dropindex` operation fails.
+
+
 ## Monitoring & Status Endpoints
 
 ### GET `/status/ram`

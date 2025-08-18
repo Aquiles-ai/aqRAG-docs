@@ -24,16 +24,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadMarkdown(filename) {
     const contentElement = document.getElementById('content');
     contentElement.innerHTML = '<div class="loading">Loading documentation...</div>';
-    
+
     fetch(`docs/${filename}.md`)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load file');
-            }
+            if (!response.ok) throw new Error('Failed to load file');
             return response.text();
         })
         .then(markdownText => {
-            // Configurar opciones de marked para mejorar el renderizado
+            // marked options (mismo comportamiento que tenías)
             marked.setOptions({
                 gfm: true,
                 breaks: true,
@@ -44,14 +42,62 @@ function loadMarkdown(filename) {
                     return code;
                 }
             });
-            
-            // Convertir Markdown a HTML y mostrarlo
-            contentElement.innerHTML = marked.parse(markdownText);
-            
-            // Generar navegación de la página
+
+            // 1) Convertir a HTML
+            const rawHtml = marked.parse(markdownText);
+
+            // 2) Filtrar/validar iframes para que solo se permitan embeds de YouTube,
+            //    y envolverlos en .video-wrapper para que sean responsive.
+            const tmp = document.createElement('div');
+            tmp.innerHTML = rawHtml;
+
+            tmp.querySelectorAll('iframe').forEach(iframe => {
+                try {
+                    const src = iframe.getAttribute('src') || '';
+                    // Normalizar URL (soporta src relativizado)
+                    const url = new URL(src, location.href);
+                    const host = url.hostname.toLowerCase();
+
+                    const isYouTubeEmbed = (
+                        (host === 'www.youtube.com' || host === 'youtube.com' || host === 'www.youtube-nocookie.com' || host === 'youtube-nocookie.com')
+                        && url.pathname.startsWith('/embed/')
+                    );
+
+                    if (!isYouTubeEmbed) {
+                        // eliminar iframes no válidos
+                        iframe.remove();
+                        return;
+                    }
+
+                    // fuerza atributos útiles y seguros
+                    iframe.setAttribute('loading', 'lazy');
+                    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                    iframe.setAttribute('allowfullscreen', '');
+                    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+
+                    // envolver en wrapper responsive
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'video-wrapper';
+                    iframe.parentNode.insertBefore(wrapper, iframe);
+                    wrapper.appendChild(iframe);
+
+                } catch (err) {
+                    // si la URL no es válida, eliminar el iframe
+                    iframe.remove();
+                }
+            });
+
+            // 3) Sanitizar con DOMPurify: permitimos iframe y los atributos que necesitamos
+            const clean = DOMPurify.sanitize(tmp.innerHTML, {
+                ADD_TAGS: ['iframe'],
+                ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'loading', 'referrerpolicy', 'sandbox', 'src', 'width', 'height']
+            });
+
+            // 4) Insertar el HTML limpio en el DOM
+            contentElement.innerHTML = clean;
+
+            // 5) Generar navegación y resaltar con Prism
             generatePageNav();
-            
-            // Aplicar resaltado de sintaxis para bloques de código
             if (window.Prism) {
                 Prism.highlightAllUnder(contentElement);
             }

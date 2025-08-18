@@ -99,7 +99,7 @@ aquiles-rag serve --host "0.0.0.0" --port 5500
 
 ## 5. Example: Setup Wizard — demo video
 
-Below is a demo video showing the Setup Wizard flow. The embed is responsive; if you render Markdown client-side with `marked` make sure your rendering pipeline allows YouTube iframes (see note).
+Below is a demo video showing the Setup Wizard flow.
 
 <div class="video-wrapper">
   <iframe

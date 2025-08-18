@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Use this guide to deploy Aquiles‑RAG to a cloud provider (e.g. Render) with minimal configuration. In this example, we’ll deploy using a private Git repo containing:
+Use this guide to deploy Aquiles-RAG to a cloud provider (e.g. Render) with minimal configuration. In this example, we’ll deploy using a private Git repo containing:
 
 ```
 requirements.txt
@@ -13,116 +13,209 @@ test_deploy.py
 
 - **requirements.txt**  
 ```
+
 FastAPI
 aquiles-rag
+python-dotenv
 PyJWT
-```
-_(Specifies the FastAPI framework, the Aquiles‑RAG package, and JWT support.)_
+psutil
 
-- **test_deploy.py**  
+```
+_(Specifies the FastAPI framework, the Aquiles-RAG package, dotenv support and JWT support.)_
+
+- **deploy_redis.py** (example file used to generate runtime config and launch)
+- **deploy_qdrant.py** (alternative example for Qdrant)
+- Optional: `.env` containing secrets (recommended to provide via provider secrets store instead)
+
+## 2. Example: Deploy with Redis
+
+Create a file (e.g. `deploy_redis.py`) with the following contents. This script constructs a `DeployConfigRd`, then `gen_configs_file()` inside a `run()` function — the `aquiles-rag deploy` command will import and execute `run()` at startup.
+
 ```python
-from aquiles.deploy_config import DeployConfig, gen_configs_file
+# deploy_redis.py
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+from aquiles.deploy_config import DeployConfigRd, gen_configs_file
 from aquiles.configs import AllowedUser
 
-# 1) Create a DeployConfig with only the essential fields:
-dp_cfg = DeployConfig(
+# Load .env if present (recommended to use provider secrets instead)
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis-dummy.com')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 123))
+REDIS_USER = os.getenv('REDIS_USERNAME', 'default')
+REDIS_PASSWORD = os.getenv('REDIS_PASS', 'dummy-password')
+
+apikeys = ["dummy-api-key", "secure-api-key"]
+
+users = [
+    AllowedUser(username="root", password="root"),
+    AllowedUser(username="supersu", password="supersu")
+]
+
+dp_cfg = DeployConfigRd(
     local=False,
-    host="redis-dummy-url.redis-cloud.com",
-    port=15177,
-    usernanme="default",
-    password="jP-dummy-password",
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    username=REDIS_USER,
+    password=REDIS_PASSWORD,
     cluster_mode=False,
     tls_mode=False,
     ssl_cert="",
     ssl_key="",
     ssl_ca="",
-    allows_api_keys=["dummy-api-key"],
-    allows_users=[AllowedUser(username="root", password="root")],
+    allows_api_keys=apikeys,
+    allows_users=users,
+    initial_cap=200,
     ALGORITHM="HS256"
 )
 
-# 2) Encapsulate config generation in a run() function for the CLI
 def run():
     print("Generating the configs file")
-    gen_configs_file(dp_cfg)
+    gen_configs_file(dp_cfg, force=True)
 ```
 
-* **Note**: In a real setup, replace the example Redis host, port, username, and password with your own. For this guide, we’re using a Redis Cloud instance on `redis.io`.
+**Notes**
+
+* Do **not** commit secrets. Use provider secret stores (Render env vars, GitHub Actions secrets, etc.), or a private `.env` excluded from VCS.
+* `initial_cap`, `ALGORITHM`, and other fields are optional — set them according to your needs.
+
+## 3. Example: Deploy with Qdrant
+
+Create a file (e.g. `deploy_qdrant.py`) with the following contents. This generates a `DeployConfigQdrant` and writes the runtime config.
+
+```python
+# deploy_qdrant.py
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+from aquiles.deploy_config import DeployConfigQdrant, gen_configs_file
+from aquiles.configs import AllowedUser
+
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
+
+HOST = os.getenv('QDRANT_HOST', 'fe2.gcp.cloud.qdrant.io')
+PORT = int(os.getenv('QDRANT_PORT', 6333))
+API_KEY_QDRANT = os.getenv('API_KEY_QDRANT', 'dummy-api-key')
+GRPC_PORT = int(os.getenv('GRPC_PORT', 6334))
+
+API_KEYS = ["dummy-api-key", "idk-api-key"]
+
+users = [
+    AllowedUser(username="root", password="root"),
+    AllowedUser(username="supersu", password="supersu")
+]
+
+dp_cfg = DeployConfigQdrant(
+    local=False,
+    host=HOST,
+    port=PORT,
+    prefer_grpc=False,           # set True if you want gRPC
+    grpc_port=GRPC_PORT,
+    api_key=API_KEY_QDRANT,
+    allows_api_keys=API_KEYS,
+    allows_users=users,
+    ALGORITHM="HS256"
+)
+
+def run():
+    print("Generating the configs file")
+    gen_configs_file(dp_cfg, force=True)
+```
+
+**Notes for Qdrant**
+
+* If you plan to use gRPC (`prefer_grpc=True`), ensure your environment supports outgoing gRPC and open the `grpc_port` if needed.
+* Qdrant cloud providers usually require an API key — pass it with `api_key` or via environment variables.
 
 
-## 2. Deploying to Render
+## 4. Deploying to Render (or similar)
 
-1. **Push** your repo (`requirements.txt` + `test_deploy.py`) to your Git provider (GitHub, GitLab, etc.).
+1. **Push** your repo containing `requirements.txt` and either `deploy_redis.py` or `deploy_qdrant.py` to your Git provider.
 
 2. **Create a new service** on Render:
 
-   * Choose **Web Service**.
-   * Link to your private repo.
+   * Choose **Web Service** and link your repo.
 
 3. **Build Settings**:
 
-   * **Environment**: Select Python (it will install from `requirements.txt`).
-   * **Build Command**: leave default (`pip install -r requirements.txt`).
+   * **Environment**: Python.
+   * **Build Command**: default (`pip install -r requirements.txt`) or `pip install -r requirements.txt --no-cache-dir`.
 
-4. **Start Command**:
+4. **Start Command** (example):
 
-   ```bash
-   aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 test_deploy.py
-   ```
+```bash
+# Redis example
+aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 deploy_redis.py
 
-   * This will:
+# Qdrant example
+aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 deploy_qdrant.py
+```
 
-     1. Import and execute `run()` from `test_deploy.py`, writing `aquiles_config.json` with your `DeployConfig`.
-     2. Launch the FastAPI server on `0.0.0.0:5500`.
+What the command does:
 
-5. **Instance Size**:
-   Select the free or small instance—Aquiles‑RAG and a single Redis connection are lightweight.
+* Imports the given config file and executes its `run()` function to create `aquiles_config.json` (or overwrite it with `force=True`).
+* Starts the FastAPI app (`uvicorn`) on the configured host/port with the specified number of workers.
 
-6. **Deploy**:
-   Click **Create Service** (or **Deploy**) and wait for Render to build and start your app.
+5. **Instance size**:
 
+   * For light usage a small instance is sufficient. For production load, increase CPU/memory and configure autoscaling as needed.
 
-## 3. How It Works
+6. **Environment variables / secrets**:
 
-* **`DeployConfig`** (in `deploy_config.py`):
+   * Prefer provider secrets over committing `.env`.
+   * Provide `QDRANT` or `REDIS` sensitive values via Render environment variables.
 
-  * Inherits all standard Redis + auth fields from `InitConfigs`.
-  * Adds `JWT_SECRET` (auto‑generated) and `ALGORITHM` for signing tokens.
-  * Can also pull from a `.env` file if present.
+## 5. How It Works (internals)
 
+* **`DeployConfigRd` / `DeployConfigQdrant`**:
+
+  * These classes mirror the runtime config schema (`InitConfigsRedis` / `InitConfigsQdrant`) and add deployment helpers like `ALGORITHM`/JWT fields.
 * **`gen_configs_file()`**:
 
-  * Writes a new `aquiles_config.json` in your user data directory (`~/.local/share/aquiles/`) only if it doesn't exist.
-  * Ensures your Redis connection details, API keys, and allowed users are in place before the server starts.
+  * Writes `aquiles_config.json` in the user data directory (`~/.local/share/aquiles/`) before the server starts.
+* **`aquiles-rag deploy` CLI**:
 
-* **CLI `deploy` command**:
-
-  * Dynamically imports `test_deploy.py`.
-  * Calls its `run()` to generate the config file.
-  * Then invokes `uvicorn` on `aquiles.main:app` to start the FastAPI service.
+  * Dynamically imports the specified Python file, executes `run()`, then starts the FastAPI app process.
 
 
-## 4. Testing Deployment
+## 6. Testing Deployment
 
-Once your service is live, Render provides a public URL. You can:
+Once the service is live and you have a public URL:
 
 1. **Verify Health**:
 
-   ```bash
-   curl https://<your-render-URL>/create/index \
-     -X POST \
-     -H "X-API-Key: dummy-api-key" \
-     -H "Content-Type: application/json" \
-     -d '{"indexname":"test","embeddings_dim":16}'
-   ```
+```bash
+curl https://<your-render-URL>/health/ready
+# => {"status":"ready"}  (if backend reachable)
+```
 
-2. **Inspect Logs** in Render to confirm:
+2. **Basic API smoke test** (example to create an index):
 
-   * `Generating the configs file` printed during startup.
-   * Redis connection established without errors.
-   * Uvicorn listening on port 5500.
+```bash
+curl https://<your-render-URL>/create/index \
+  -X POST \
+  -H "X-API-Key: <your-deploy-api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{"indexname":"test","embeddings_dim":16}'
+```
 
-3. **Use the API** as described in API Reference or API CLIENT.
+3. **Inspect Logs** for:
+
+* `Generating the configs file` at startup.
+* Successful connection to Redis or Qdrant.
+* Uvicorn listening on port `5500`.
+
+## 7. Troubleshooting & Tips
+
+* **Secrets**: never commit credentials. Use Render/GCP/AWS secret stores or GitHub Actions secrets to inject env vars at deploy time.
+* **Qdrant metrics**: Qdrant does not expose Redis `INFO` metrics — monitoring differs between backends (see Monitoring docs).
+* **gRPC**: if using `prefer_grpc=True`, ensure the runtime environment supports gRPC outbound connections.
+* **Networking**: when using managed Redis (AWS ElastiCache, Azure), check VPC/firewall rules and TLS settings.
+* **Automated CI**: to run non-interactive deployments in CI, generate the JSON config locally and include it in the artifact (or use a bootstrap script that writes `aquiles_config.json` from environment variables).
 
 
-With just a `requirements.txt`, a simple `test_deploy.py`, and the `aquiles-rag deploy` CLI command, you can get Aquiles‑RAG running on Render (or any similar platform) in minutes. 🚀
+With `requirements.txt` plus a small `deploy_*.py` that generates the runtime config, and the `aquiles-rag deploy` CLI command, you can deploy Aquiles-RAG to Render or similar providers quickly and reproducibly. 🚀

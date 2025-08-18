@@ -48,7 +48,7 @@ Below are two load test videos demonstrating the behavior of Aquiles-RAG using R
 
 
 > **Next Steps**  
-> - If you haven’t yet, begin with Installation & Configuration and pick your backend: **Redis** or **Qdrant**.  
+> - If you haven’t yet, begin with Installation & Configuration and pick your RAG: **Redis** or **Qdrant**.  
 > - For hands-on testing, check out the UI Playground via the Python client or CLI commands
 > - When you need detailed payload schemas or request examples, jump to the REST API Reference (`api.md`).
 

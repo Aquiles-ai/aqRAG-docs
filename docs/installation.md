@@ -1,10 +1,10 @@
 # Installation & Configuration
 
-This guide shows you how to install Aquiles‑RAG, configure it, and choose the correct Redis connection based on your environment (standalone, cluster, cloud/TLS, etc.).
+This guide shows you how to install Aquiles-RAG, initialise it, and configure it using the new interactive **Setup Wizard**. The installation steps remain the same, but the manual/flag-based configuration options have been replaced by the wizard which walks you through everything needed for Redis or Qdrant.
 
 ---
 
-## 1. Install Aquiles‑RAG
+## 1. Install Aquiles-RAG
 
 ### Via PyPI (recommended)
 ```bash
@@ -25,153 +25,90 @@ source .venv/bin/activate
 pip install -e .
 ```
 
----
+## 2. Setup Wizard (new — recommended)
 
-## 2. Initialise & Locate Config File
+The previous manual CLI flags for configuration have been deprecated in favor of an interactive **Setup Wizard**. The wizard asks the necessary questions to create a fully valid configuration file for either **Redis** or **Qdrant**, and saves it to disk.
 
-On first run, Aquiles‑RAG will create a JSON config at:
+### How to run the wizard
+
+Run the interactive configuration wizard with:
+
+```bash
+aquiles-rag configs
+```
+
+> The wizard is interactive and will prompt you for connection details, credentials, TLS options, API keys and an admin user. At the end it shows a summary and asks whether to save the configuration file.
+
+### What the wizard asks (summary)
+
+**If you choose Redis**
+
+* Is Redis running locally? (yes/no)
+* Host (default: `localhost`)
+* Port (default: `6379`)
+* Username (optional)
+* Password (optional)
+* Is this a Redis Cluster? (yes/no)
+* Use TLS/SSL? (if yes, prompts for cert/key/CA paths)
+* Allowed API keys (comma-separated)
+* Create admin user (username + password)
+* Final confirmation: save config to disk
+
+**If you choose Qdrant**
+
+* Is Qdrant running locally? (yes/no)
+* Host (default: `localhost`)
+* Port (default: `6333`)
+* Prefer gRPC instead of HTTP? (yes/no)
+* gRPC port (default: `6334`)
+* Qdrant API key (optional)
+* Auth token provider (optional)
+* Allowed API keys (comma-separated)
+* Create admin user (username + password)
+* Final confirmation: save config to disk
+
+The wizard saves the configuration into the standard location:
 
 ```
 ~/.local/share/aquiles/aquiles_config.json
 ```
 
-Default contents:
 
-```json
-{
-  "local": true,
-  "host": "localhost",
-  "port": 6379,
-  "username": "",
-  "password": "",
-  "cluster_mode": false,
-  "tls_mode": false,
-  "ssl_certfile": "",
-  "ssl_keyfile": "",
-  "ssl_ca_certs": "",
-  "allows_api_keys": [""],
-  "allows_users": [{ "username": "root", "password": "root" }]
-}
+## 3. Initialise & Locate Config File
+
+On first successful run the wizard will create the config file at the path above. Example path:
+
+```
+~/.local/share/aquiles/aquiles_config.json
 ```
 
----
+You can open and inspect this file to confirm the values the wizard wrote. If you need to re-run the wizard and overwrite the existing file, run the wizard again (or call the Python fallback with `checkout=False` where applicable).
 
-## 3. Edit Configuration
 
-### A) Manually
+## 4. Verify & Start
 
-Open `~/.local/share/aquiles/aquiles_config.json` in your editor and adjust fields.
-
-### B) Via CLI
+1. **Verify connection** by launching Aquiles-RAG:
 
 ```bash
-# Example: connect to a remote Redis with password
-aquiles-rag configs \
-  --local false \
-  --host redis.example.com \
-  --port 6380 \
-  --username myuser \
-  --password secretpass \
-  --tls-mode true \
-  --ssl-cert /path/to/client.crt \
-  --ssl-key  /path/to/client.key \
-  --ssl-ca   /path/to/ca.crt
+aquiles-rag serve --host "0.0.0.0" --port 5500
 ```
 
----
+2. **Check logs** for successful Redis/Qdrant handshake and index-info calls.
+3. **Open the UI** at `http://localhost:5500/ui` and confirm you can list indices and that the connection matches the backend you configured.
 
-## 4. Choosing Your Redis Connection Mode
 
-Aquiles‑RAG’s `get_connection()` logic supports four modes:
+## 5. Example: Setup Wizard — demo video
 
-1. **Local Cluster**
+Below is a demo video showing the Setup Wizard flow. The embed is responsive; if you render Markdown client-side with `marked` make sure your rendering pipeline allows YouTube iframes (see note).
 
-   * Settings:
+<div class="video-wrapper">
+  <iframe
+    src="https://www.youtube.com/embed/zUKSniYczyY?si=R04jNrrwJv_uyD6N"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+    loading="lazy"></iframe>
+</div>
 
-     ```json
-     { "local": true, "cluster_mode": true }
-     ```
-   * Code path:
-
-     ```python
-     RedisCluster(host, port, decode_responses=True)
-     ```
-
-2. **Local Standalone**
-
-   * Settings:
-
-     ```json
-     { "local": true, "cluster_mode": false }
-     ```
-   * Code path:
-
-     ```python
-     redis.Redis(host, port, decode_responses=True)
-     ```
-
-3. **Remote with TLS/SSL**
-
-   * Settings:
-
-     ```json
-     {
-       "local": false,
-       "tls_mode": true,
-       "username": "...",         # optional
-       "password": "...",         # optional
-       "ssl_certfile": "...",     # client cert
-       "ssl_keyfile": "...",      # client key
-       "ssl_ca_certs": "..."      # CA bundle
-     }
-     ```
-   * Code path:
-
-     ```python
-     redis.Redis(
-       host, port,
-       username=username or None,
-       password=password or None,
-       ssl=True,
-       decode_responses=True,
-       ssl_certfile=ssl_certfile,
-       ssl_keyfile=ssl_keyfile,
-       ssl_ca_certs=ssl_ca_certs
-     )
-     ```
-
-4. **Remote without TLS/SSL**
-
-   * Settings:
-
-     ```json
-     { "local": false, "tls_mode": false }
-     ```
-   * Code path:
-
-     ```python
-     redis.Redis(
-       host, port,
-       username=username or None,
-       password=password or None,
-       decode_responses=True
-     )
-     ```
-
-> **Tip:**
->
-> * If you’re on a private network or using Docker Compose, standalone local (`local=true`) is easiest.
-> * For production clusters, enable `cluster_mode`.
-> * For managed cloud services (AWS ElastiCache, Azure Redis, etc.), set `tls_mode=true` and provide certs.
-
----
-
-## 5. Verify & Start
-
-1. **Verify connection** by launching Aquiles‑RAG:
-
-   ```bash
-   aquiles-rag serve --host "0.0.0.0" --port 5500
-   ```
-2. **Check logs** for successful Redis handshake and index-info calls.
-3. **Open the UI** at `http://localhost:5500/ui` and confirm you can list indices.
+> View on YouTube: [https://www.youtube.com/watch?v=zUKSniYczyY](https://www.youtube.com/watch?v=zUKSniYczyY)

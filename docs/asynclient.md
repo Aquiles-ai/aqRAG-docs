@@ -1,4 +1,4 @@
-## Aquiles-RAG Async Python Client
+# Aquiles-RAG Async Python Client
 
 The `aquiles.client.AsyncAquilesRAG` class provides an asynchronous interface for interacting with your Aquiles-RAG service. Use it in Python `async` contexts to create indices, ingest text in chunks, and query your vector store — all without blocking your event loop.
 

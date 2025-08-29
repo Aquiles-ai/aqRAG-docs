@@ -149,10 +149,10 @@ def run():
 
 ```bash
 # Redis example
-aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 deploy_redis.py
+aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 2 deploy_redis.py
 
 # Qdrant example
-aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 4 deploy_qdrant.py
+aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 2 deploy_qdrant.py
 ```
 
 What the command does:

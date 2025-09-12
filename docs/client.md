@@ -1,7 +1,6 @@
 # Aquiles-RAG Python Client
 
-The `aquiles.client.AquilesRAG` class provides a simple, high-level interface for interacting with your Aquiles-RAG service. Use it to create indices, ingest text (in chunks), and query your vector store — all in pure Python.
-
+The `aquiles.client.AquilesRAG` class provides a simple, high-level interface for interacting with your Aquiles-RAG service. Use it to create indices, ingest text (in chunks), query your vector store — all in pure Python. Aquiles-RAG works with **Redis, Qdrant, or PostgreSQL** backends.
 
 ## 📦 Installation
 
@@ -54,9 +53,11 @@ print(response_text)  # server response (note: client returns response.text)
 
     * Redis: `{"status":"success","index":"<indexname>","fields":[...]}`
     * Qdrant: `{"status":"success","index":"<indexname>"}`
+    * PostgreSQL: `{"status":"success","index":"<indexname>"}`
+
   * Caller may want to `json.loads(response_text)` if you need structured data.
 
-### 2. `send_rag(embedding_func, index, name_chunk, raw_text, dtype="FLOAT32", embedding_model=None)`
+### 2. `send_rag(embedding_func, index, name_chunk, raw_text, dtype="FLOAT32", embedding_model=None, metadata=None)`
 
 Split a large text into chunks, compute embeddings (using your `embedding_func`) and store each chunk.
 
@@ -71,7 +72,8 @@ responses = client.send_rag(
     name_chunk="doc1",
     raw_text="Very long document text...",
     dtype="FLOAT32",
-    embedding_model="text-embedding-v1"  # optional metadata
+    embedding_model="text-embedding-v1",  # optional metadata
+    metadata={"author": "Alice", "language": "EN"}  # optional metadata attached to every chunk
 )
 
 for resp in responses:
@@ -86,17 +88,23 @@ for resp in responses:
   * `raw_text` (`str`): Full document text to be chunked and ingested.
   * `dtype` (`str`, default="FLOAT32"): Data type for the index.
   * `embedding_model` (`str | None`): Optional model identifier sent as metadata with each chunk.
+  * `metadata` (`Dict[str, Any] | None`): Optional metadata to associate with every chunk (see allowed keys below).
 
 * **Behavior / Notes**
 
-  * The client uses `chunk_text_by_words()` to split `raw_text` into chunks (default behavior \~600 words / \~1024 tokens by your utils).
+  * The client uses `chunk_text_by_words()` to split `raw_text` into chunks (default behavior ≈600 words / ≈1024 tokens by your utils).
+
   * For each chunk, the client calls your `embedding_func(chunk)` and posts to `/rag/create`.
+
   * Each chunk upload uses a 10-second HTTP timeout.
+
   * The returned list contains server JSON responses for successful uploads or `{"chunk_index": N, "error": "<message>"}` for failures.
-  * Supports both Redis and Qdrant backends — `embedding_model` is forwarded as optional metadata.
 
+  * Supports Redis, Qdrant and PostgreSQL backends — `embedding_model` and `metadata` are forwarded as optional metadata.
 
-### 3. `query(index, embedding, dtype="FLOAT32", top_k=5, cosine_distance_threshold=0.6, embedding_model=None)`
+  * **Allowed metadata keys** (backend may reject unknown keys): `author`, `language`, `topics`, `source`, `created_at`, `extra`.
+
+### 3. `query(index, embedding, dtype="FLOAT32", top_k=5, cosine_distance_threshold=0.6, embedding_model=None, metadata=None)`
 
 Search the index/collection for the top-K nearest neighbors.
 
@@ -107,7 +115,8 @@ results = client.query(
     dtype="FLOAT32",
     top_k=5,
     cosine_distance_threshold=0.6,
-    embedding_model="text-embedding-v1"  # optional
+    embedding_model="text-embedding-v1",  # optional
+    metadata={"author": "Alice"}          # optional filter
 )
 
 for hit in results["results"]:
@@ -122,11 +131,12 @@ for hit in results["results"]:
   * `top_k` (`int`, default=5): Number of neighbors to return.
   * `cosine_distance_threshold` (`float`, default=0.6): Filter out results with distance > threshold.
   * `embedding_model` (`str | None`): Optional metadata filter — forwarded to server.
+  * `metadata` (`Dict[str, Any] | None`): Optional metadata filter (see allowed keys in `send_rag`).
 
 * **Behavior / Notes**
 
   * Returns parsed JSON (`dict`) from the server with `status`, `total`, and `results`.
-  * Works with both Redis (server converts the embedding to the requested dtype) and Qdrant (server forwards float list to Qdrant).
+  * Works with Redis, Qdrant and PostgreSQL backends — server converts/forwards the embedding to the storage engine as appropriate.
 
 ### 4. `drop_index(index_name, delete_docs=False)`
 
@@ -145,7 +155,32 @@ print(resp)  # parsed JSON response from server
 * **Behavior / Notes**
 
   * Returns parsed JSON from the server indicating success or error.
-  * Works for both Redis and Qdrant backends.
+  * Works for Redis, Qdrant and PostgreSQL backends.
+
+### 5. `reranker(query, docs)`
+
+Re-rank candidate documents returned by the RAG using the configured reranker endpoint.
+
+```python
+# docs can be the raw response from client.query(...) or a list of doc dicts
+response = client.reranker("Tell me about LLaDA", docs)
+print(response)  # server-side reranker JSON with reordered scores / metadata
+```
+
+* **Parameters**
+
+  * `query` (`str`): Original user query or question.
+  * `docs` (`List[dict] | Dict`): Candidate documents to be reranked. Accepts either:
+
+    * a list of document dicts, or
+    * the full response dict from `client.query(...)` (it will use the `results` key if present).
+
+* **Behavior / Notes**
+
+  * The client extracts the text from each provided chunk/document and posts a `rerankerjson` payload to the server's rerank endpoint (`/v1/rerank`).
+  * The server-side reranker returns a JSON payload with reranked results (order and scores), which the client returns as-is.
+  * Useful when you want a second-stage, model-based ranking step after vector retrieval (low-latency vector search + high-fidelity reranker).
+  * Works independently of the vector backend (Redis, Qdrant, PostgreSQL).
 
 ## 🛠 Error Handling
 
@@ -166,6 +201,7 @@ except RuntimeError as err:
 * **Timeouts**: `send_rag` uses a 10-second timeout per chunk upload. If you need longer timeouts, modify the client or wrap the call.
 * **Chunking**: default chunking is handled by `chunk_text_by_words()` in `aquiles.utils`. Tune that util if you need different chunk sizes. The client sends `chunk_size: 1024` in the payload for each chunk.
 * **Consistency**: ensure `dtype` used for `create_index` and `query` matches the dtype you used when ingesting via `send_rag`.
-* **Backend differences**: some server responses differ between Redis and Qdrant (e.g., create index schema), but the client abstracts the network calls — inspect returned JSON/text as needed.
+* **Backend differences**: some server responses differ between Redis, Qdrant and PostgreSQL (e.g., create index schema), but the client abstracts the network calls — inspect returned JSON/text as needed.
+* **PostgreSQL note**: when using PostgreSQL as the backend, ensure your server is configured with the expected extensions (e.g., `pgvector`) and connection pooling settings; the client will forward metadata and embeddings similarly to other backends.
 
-Happy embedding and querying with Aquiles-RAG! 🚀
+Happy embedding, querying and reranking with Aquiles-RAG! 🚀

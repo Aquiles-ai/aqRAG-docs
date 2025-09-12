@@ -1,6 +1,6 @@
 # Aquiles-RAG Async Python Client
 
-The `aquiles.client.AsyncAquilesRAG` class provides an asynchronous interface for interacting with your Aquiles-RAG service. Use it in Python `async` contexts to create indices, ingest text in chunks, and query your vector store — all without blocking your event loop.
+The `aquiles.client.AsyncAquilesRAG` class provides an asynchronous interface for interacting with your Aquiles-RAG service. Use it in Python `async` contexts to create indices, ingest text in chunks, and query your vector store — all without blocking your event loop. Aquiles-RAG works with **Redis, Qdrant, or PostgreSQL** backends.
 
 ### 📦 Installation
 
@@ -8,7 +8,7 @@ Ensure you have the `aquiles-rag` package and `httpx` installed:
 
 ```bash
 pip install aquiles-rag httpx
-````
+```
 
 ### 🚀 Quick Start
 
@@ -75,8 +75,7 @@ print(response_text)  # raw server response text
 
   * `str` — raw server response text (server returns slightly different JSON depending on backend).
 
-
-#### 2. `async def query(index, embedding, dtype="FLOAT32", top_k=5, cosine_distance_threshold=0.6, embedding_model=None) -> List[dict]`
+#### 2. `async def query(index, embedding, dtype="FLOAT32", top_k=5, cosine_distance_threshold=0.6, embedding_model=None, metadata=None) -> List[dict]`
 
 Search the index/collection for the top-K nearest neighbors.
 
@@ -99,6 +98,7 @@ results = await client.query(
   * `top_k` (`int`, default=5): Number of neighbors to return.
   * `cosine_distance_threshold` (`float`, default=0.6): Max cosine distance filter.
   * `embedding_model` (`str | None`): Optional metadata filter (forwarded to server).
+  * `metadata` (`Dict[str, Any] | None`): Optional metadata filter (see allowed keys in `send_rag`).
 
 * **Returns**
 
@@ -106,9 +106,10 @@ results = await client.query(
 
 * **Backend notes**
 
-  * Works with both Redis and Qdrant. Redis implementation converts embedding types server-side; Qdrant forwards the float array.
+  * Works with Redis and Qdrant. Redis implementation converts embedding types server-side; Qdrant forwards the float array.
+  * PostgreSQL is also supported — when using PostgreSQL ensure the server is configured for vector storage (e.g., `pgvector`) and appropriate connection pooling; the server will accept the same query payload structure and handle conversion/storage as configured.
 
-#### 3. `async def send_rag(embedding_func, index, name_chunk, raw_text, dtype="FLOAT32", embedding_model=None) -> List[dict]`
+#### 3. `async def send_rag(embedding_func, index, name_chunk, raw_text, dtype="FLOAT32", embedding_model=None, metadata=None) -> List[dict]`
 
 Split a long text into chunks, compute embeddings using the provided function (sync or async), and upload them concurrently.
 
@@ -131,6 +132,7 @@ responses = await client.send_rag(
   * `raw_text` (`str`): Full text to split and ingest.
   * `dtype` (`Literal[...]`, default="FLOAT32"): Embedding dtype (forwarded to server).
   * `embedding_model` (`str | None`): Optional model identifier sent as chunk metadata.
+  * `metadata` (`Dict[str, Any] | None`): Optional metadata to associate with each chunk (allowed keys below).
 
 * **Behavior / Implementation details**
 
@@ -138,11 +140,13 @@ responses = await client.send_rag(
   * For each chunk the client calls `embedding_func(chunk)`. If the result is awaitable the client awaits it.
   * Uploads all chunks concurrently using `asyncio.gather()` and the helper `_send_chunk`.
   * Each chunk payload includes `"chunk_size": 1024` in the body (server uses this field).
-  * The client constructs payloads with optional `embedding_model` when provided.
+  * The client constructs payloads with optional `embedding_model` and `metadata` when provided.
 
 * **Returns**
 
   * `List[dict]` — one entry per chunk. Successful uploads return the server JSON; failures return `{"chunk_index": N, "error": "<message>"}`.
+
+* **Allowed metadata keys** (backend may reject unknown keys): `author`, `language`, `topics`, `source`, `created_at`, `extra`.
 
 #### 4. `async def drop_index(index_name, delete_docs=False) -> dict`
 
@@ -162,6 +166,31 @@ print(resp)  # parsed JSON response
 
   * Parsed JSON response from the server.
 
+#### 5. `async def reranker(query, docs) -> List[dict]`
+
+Re-rank candidate documents returned by the RAG using the configured reranker endpoint.
+
+```python
+# docs can be the raw response from await client.query(...) or a list of doc dicts
+response = await client.reranker("Tell me about LLaDA", docs)
+print(response)  # server-side reranker JSON with reordered scores / metadata
+```
+
+* **Parameters**
+
+  * `query` (`str`): Original user query or question.
+  * `docs` (`List[dict] | Dict`): Candidate documents to be reranked. Accepts either:
+
+    * a list of document dicts, or
+    * the full response dict from `client.query(...)` (it will use the `results` key if present).
+
+* **Behavior / Notes**
+
+  * The client extracts the text from each provided chunk/document and posts a `rerankerjson` payload to the server's rerank endpoint (`/v1/rerank`).
+  * The server-side reranker returns a JSON payload with reranked results (order and scores), which the client returns as-is.
+  * Useful when you want a second-stage, model-based ranking step after vector retrieval (low-latency vector search + high-fidelity reranker).
+  * Works independently of the vector backend (Redis, Qdrant, PostgreSQL).
+
 ### ⏱ Timeouts & HTTP client
 
 * The client uses an internal `httpx.Timeout` by default:
@@ -178,7 +207,7 @@ Timeout(connect=10.0, read=30.0, write=30.0, pool=30.0)
 ### 🛠 Error Handling
 
 * All async methods call `response.raise_for_status()` — on non-2xx responses `httpx.HTTPStatusError` is raised (inspect `err.response` for details).
-* `send_rag` captures per-chunk exceptions and returns them inline as `{"chunk_index": N, "error": "..."}`
+* `send_rag` captures per-chunk exceptions and returns them inline as `{"chunk_index": N, "error": "..."}`.
 * Example:
 
 ```python
@@ -194,6 +223,7 @@ except httpx.HTTPStatusError as err:
 * **Concurrency**: `send_rag` performs concurrent uploads via `asyncio.gather()` — this speeds ingestion but be mindful of rate limits and backend throughput.
 * **Embedding functions**: Support for both sync and async `embedding_func` makes it easy to plug-in sync models or async HTTP calls (e.g., remote embedding services).
 * **Chunking**: Default chunking is handled by `chunk_text_by_words()` in `aquiles.utils`. Adjust that util to change chunk sizes if needed.
-* **Backend differences**: server responses and metrics vary across Redis and Qdrant — consult API Reference for backend-specific behavior.
+* **Backend differences**: server responses and metrics vary across Redis, Qdrant and PostgreSQL — consult API Reference for backend-specific behavior.
+* **PostgreSQL note**: when using PostgreSQL as the backend, ensure your server is configured with the expected extensions (e.g., `pgvector`) and connection pooling settings; the async client will forward metadata and embeddings similarly to other backends.
 
-Happy asynchronous embedding and querying with Aquiles-RAG! 🚀
+Happy asynchronous embedding, querying and reranking with Aquiles-RAG! 🚀

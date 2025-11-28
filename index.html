@@ -463,28 +463,8 @@
 
             // Inicializar iconos de Lucide
             lucide.createIcons();
-
-            // Cargar scripts de la aplicación
-            loadScript('docs.js', function() {
-                loadScript('search.js', function() {
-                    // Iniciar búsqueda después de que docs.js esté listo
-                    if (typeof initSearch === 'function') {
-                        initSearch();
-                    }
-                });
-            });
         }
 
-        // Función para cargar scripts dinámicamente
-        function loadScript(src, callback) {
-            const script = document.createElement('js');
-            script.src = src;
-            script.onload = callback;
-            script.onerror = function() {
-                console.error('X Error al cargar script:', src);
-            };
-            document.body.appendChild(script);
-        }
 
         // Iniciar cuando el DOM esté listo
         if (document.readyState === 'loading') {
@@ -521,5 +501,7 @@
             if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobileMenuFn);
         });
     </script>
+    <script src="js/docs.js"></script>
+    <script src="js/search.js"></script>
 </body>
 </html>

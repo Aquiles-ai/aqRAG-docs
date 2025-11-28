@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="light scroll-pt-20">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aquiles-RAG - Documentation</title>
-    <link rel="icon" type="image/x-icon" href="static/aq-fav.png" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,9 +39,10 @@
                         }
                     },
                     animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'fade-in': 'fadeIn 1s ease-out',
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                        'float-slow': 'float 12s ease-in-out 2s infinite',
+                        'fade-in': 'fadeIn 0.4s ease-out',
                         'slide-down': 'slideDown 0.3s ease-out',
                     },
                     keyframes: {
@@ -49,13 +50,9 @@
                             '0%, 100%': { transform: 'translateY(0px)' },
                             '50%': { transform: 'translateY(-20px)' },
                         },
-                        glow: {
-                            '0%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.2)' },
-                            '100%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.4)' },
-                        },
                         fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         },
                         slideDown: {
                             '0%': { transform: 'translateY(-10px)', opacity: '0' },
@@ -67,581 +64,461 @@
         }
     </script>
     
-    <!-- Library for converting Markdown to HTML -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Optional: for code highlighting -->
+    <!-- Prism CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* Custom styles */
+        /* Performance & Reset */
         html {
             scroll-behavior: smooth;
         }
+        
+        .gpu-accelerated {
+            transform: translateZ(0);
+            will-change: transform;
+        }
 
+        /* Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
-
         ::-webkit-scrollbar-track {
-            background: #f5f5f5;
+            background: rgba(245, 245, 245, 0.5);
         }
-
         ::-webkit-scrollbar-thumb {
-            background: #8b5cf6;
+            background: #d8b4fe;
             border-radius: 4px;
+            transition: background 0.3s;
         }
-
         ::-webkit-scrollbar-thumb:hover {
-            background: #7c3aed;
+            background: #8b5cf6;
         }
 
-        /* Search modal styles */
+        /* Markdown Content Styles */
+        .content h1 {
+            @apply font-lora text-4xl font-bold text-gray-900 mb-6 leading-tight;
+        }
+        .content h2 {
+            @apply font-lora text-2xl font-semibold text-gray-900 mt-10 mb-4 pb-2 border-b border-gray-100;
+        }
+        .content h3 {
+            @apply font-lora text-xl font-semibold text-gray-800 mt-8 mb-3;
+        }
+        .content p {
+            @apply font-inter text-base text-gray-600 leading-7 mb-4;
+        }
+        .content code {
+            @apply font-mono text-sm bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100;
+        }
+        .content pre {
+            @apply bg-[#2d2d2d] rounded-xl p-4 my-6 overflow-x-auto shadow-lg border border-gray-800 text-sm;
+        }
+        .content pre code {
+            @apply bg-transparent text-gray-100 p-0 border-none;
+        }
+        .content ul {
+            @apply list-disc list-outside ml-6 mb-4 space-y-2 text-gray-600;
+        }
+        .content ol {
+            @apply list-decimal list-outside ml-6 mb-4 space-y-2 text-gray-600;
+        }
+        .content li {
+            @apply leading-7;
+        }
+        .content blockquote {
+            @apply border-l-4 border-purple-500 bg-purple-50/50 p-4 my-6 rounded-r-lg text-gray-700 italic;
+        }
+        .content table {
+            @apply w-full border-collapse my-6 text-sm block overflow-x-auto;
+        }
+        .content th {
+            @apply bg-gray-50 text-left p-3 border border-gray-200 font-semibold text-gray-900 min-w-[150px];
+        }
+        .content td {
+            @apply p-3 border border-gray-200 text-gray-600 align-top;
+        }
+        .content a {
+            @apply text-purple-600 underline decoration-purple-300 decoration-1 underline-offset-2 hover:decoration-2 transition-all;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            @apply flex flex-col items-center justify-center py-20 text-gray-400;
+        }
+
+        /* Search Modal Styles */
         .search-modal {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            z-index: 9999;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
             display: flex;
+            align-items: flex-start;
             justify-content: center;
-            align-items: center;
+            padding-top: 5rem;
         }
 
         .search-modal-content {
-            background-color: white;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 42rem;
             width: 90%;
-            max-width: 700px;
-            border-radius: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
             max-height: 80vh;
             display: flex;
             flex-direction: column;
-            margin: 0 auto;
-            position: relative;
-            border: 1px solid #e5e7eb;
         }
 
         .search-header {
             display: flex;
-            border-bottom: 1px solid #e5e7eb;
+            align-items: center;
             padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            gap: 0.5rem;
         }
 
         .search-modal-input {
             flex: 1;
-            background-color: transparent;
+            padding: 0.5rem;
+            font-size: 1.125rem;
             border: none;
-            color: #111827;
-            font-size: 1.1rem;
             outline: none;
-            font-family: 'Inter', sans-serif;
         }
 
         .search-close-btn {
-            background: none;
-            border: none;
-            color: #6b7280;
-            font-size: 1.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
             cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        .search-close-btn:hover {
-            background-color: #f3f4f6;
-            color: #111827;
         }
 
         .search-results {
             overflow-y: auto;
-            max-height: calc(80vh - 60px);
-            padding: 0;
+            padding: 0.5rem;
+            max-height: 60vh;
         }
 
-        .search-empty {
-            padding: 2rem;
-            text-align: center;
-            color: #6b7280;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .search-result-item {
+        .search-result {
             padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #f3f4f6;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background 0.2s;
         }
 
-        .search-result-item:hover {
-            background-color: #f9fafb;
+        .search-result:hover {
+            background: #f9fafb;
         }
 
         .search-result-title {
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-family: 'Lora', serif;
-            color: #111827;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
         }
 
         .search-result-context {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             color: #6b7280;
-            line-height: 1.4;
-            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
         }
 
         .search-highlight {
-            background-color: rgba(139, 92, 246, 0.2);
-            color: #7c3aed;
+            background-color: rgba(253, 224, 71, 0.4);
+            color: #854d0e;
             padding: 0 2px;
             border-radius: 2px;
+            font-weight: 500;
         }
 
-        /* Content styles */
-        .content h1 {
-            font-family: 'Lora', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 1rem;
-            line-height: 1.2;
-        }
-
-        .content h2 {
-            font-family: 'Lora', serif;
-            font-size: 2rem;
-            font-weight: 600;
-            color: #111827;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            line-height: 1.3;
-        }
-
-        .content h3 {
-            font-family: 'Lora', serif;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #111827;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-            line-height: 1.4;
-        }
-
-        .content p {
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            line-height: 1.7;
-            color: #374151;
-            margin-bottom: 1rem;
-        }
-
-        .content code {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: #f3f4f6;
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            color: #7c3aed;
-        }
-
-        .content pre {
-            background-color: #1f2937;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        .content pre code {
-            background-color: transparent;
-            color: #e5e7eb;
-            padding: 0;
-        }
-
-        .content ul, .content ol {
-            font-family: 'Inter', sans-serif;
-            margin-bottom: 1rem;
-            padding-left: 1.5rem;
-        }
-
-        .content li {
-            margin-bottom: 0.5rem;
-            color: #374151;
-            line-height: 1.6;
-        }
-
-        .content blockquote {
-            border-left: 4px solid #8b5cf6;
-            background-color: #f8fafc;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 0.5rem 0.5rem 0;
-        }
-
-        .content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .content th, .content td {
-            border: 1px solid #e5e7eb;
-            padding: 0.75rem;
-            text-align: left;
-        }
-
-        .content th {
-            background-color: #f9fafb;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem;
-            color: #6b7280;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .error {
-            padding: 2rem;
-            text-align: center;
-            color: #dc2626;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .error h2 {
-            font-family: 'Lora', serif;
-            color: #dc2626;
-            margin-bottom: 1rem;
-        }
-
-        .video-wrapper {
-            width: 100%;
-            max-width: 100%;
-            aspect-ratio: 16 / 9;
-            margin: 1rem 0;
-        }
-
-        .video-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
+        /* Page Navigation */
+        .page-nav-link {
             display: block;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+        }
+
+        .page-nav-link:hover {
+            color: #8b5cf6;
+            background: #f9fafb;
+        }
+
+        .page-nav-link.active {
+            color: #8b5cf6;
+            border-left-color: #8b5cf6;
+            background: #faf5ff;
+        }
+
+        /* Active Navigation Link */
+        .nav-link.active {
+            background: #faf5ff;
+            color: #8b5cf6;
         }
     </style>
 </head>
 
-<body class="bg-cream-50 text-gray-900 min-h-screen overflow-x-hidden font-inter">
+<body class="bg-cream-50 text-gray-900 min-h-screen font-inter selection:bg-purple-100 selection:text-purple-900">
+    
     <!-- Background Effects -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float"></div>
-        <div class="absolute top-3/4 right-1/4 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-float" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-float" style="animation-delay: 4s;"></div>
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-300/20 rounded-full blur-3xl animate-float gpu-accelerated"></div>
+        <div class="absolute top-[40%] right-[-10%] w-[400px] h-[400px] bg-purple-400/20 rounded-full blur-3xl animate-float-delayed gpu-accelerated"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-indigo-300/20 rounded-full blur-3xl animate-float-slow gpu-accelerated"></div>
     </div>
 
     <!-- Header -->
-    <header class="relative z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 transition-all duration-300" id="main-header">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
+                <!-- Logo & Mobile Menu -->
                 <div class="flex items-center space-x-4">
-                    <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Toggle mobile menu">
-                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
                     </button>
 
-                    <a href="#" class="flex items-center space-x-2 animate-float">
-                        <img src="static/aq-fav.png" alt="Aquiles-RAG" class="w-8 h-8 rounded-lg">
+                    <a href="#" onclick="loadMarkdown('index'); return false;" class="flex items-center space-x-2 group">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-200 group-hover:shadow-purple-300 transition-all">
+                            A
+                        </div>
                         <div>
-                            <h1 class="text-xl font-bold font-lora">
+                            <h1 class="text-xl font-bold font-lora leading-none">
                                 <span class="text-gray-900">Aquiles</span><span class="text-purple-600">-RAG</span>
                             </h1>
-                            <p class="text-xs text-gray-500 font-inter">Documentation</p>
+                            <p class="text-[10px] text-gray-500 font-inter uppercase tracking-wider font-semibold">Documentation</p>
                         </div>
                     </a>
                 </div>
 
-                <!-- Search -->
-                <div class="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
-                    <div class="relative w-full">
-                        <input type="text" placeholder="Search documentation..." class="search-input w-full px-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter text-sm">
-                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">Ctrl K</span>
-                    </div>
+                <!-- Search Bar -->
+                <div class="hidden md:flex items-center flex-1 max-w-lg mx-8">
+                    <button id="open-search-desktop" class="w-full flex items-center space-x-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 hover:border-purple-300 hover:bg-white hover:shadow-sm transition-all group">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400 group-hover:text-purple-500"></i>
+                        <span class="text-sm font-medium">Search documentation...</span>
+                        <span class="ml-auto text-xs border border-gray-200 rounded px-1.5 py-0.5 bg-gray-100 font-mono group-hover:border-purple-200">⌘K</span>
+                    </button>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center space-x-4">
-                    <a href="https://github.com/Aquiles-ai" target="_blank" class="hidden md:flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors font-inter font-medium">
-                        <i data-lucide="github" class="w-4 h-4"></i>
-                        <span>GitHub</span>
+                <div class="flex items-center space-x-2">
+                    <button id="open-search-mobile" class="md:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
+                    <a href="https://github.com/Aquiles-ai" target="_blank" class="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="GitHub">
+                        <i data-lucide="github" class="w-5 h-5"></i>
                     </a>
+                    <div class="h-6 w-px bg-gray-200 mx-2 hidden sm:block"></div>
+                    <span class="text-xs font-mono text-purple-600 bg-purple-50 px-2 py-1 rounded-md hidden sm:block">v1.0.2</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Mobile menu overlay -->
-    <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden">
-        <div class="fixed inset-y-0 left-0 w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200 overflow-y-auto animate-slide-down">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold font-lora text-gray-900">Navigation</h2>
-                    <button id="close-menu-button" class="p-2 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Close mobile menu">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                
-                <div class="space-y-6">
-                    <div>
-                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Guides</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="index">Introduction</a>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="installation">Installation</a>
-                    </div>
-                    
-                    <div>
-                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Reference</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="api">API</a>
-                    </div>
-                    
-                    <div>
-                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Deploy</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="deploy">Deploy</a>
-                    </div>
-                    
-                    <div>
-                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Client</div>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="client">Aquiles-RAG Client - Py</a>
-                        <a href="#" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter" data-doc="asynclient">Aquiles-RAG Async Client - Py</a>
-                    </div>
-                    
-                    <div>
-                        <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Community</div>
-                        <a href="https://github.com/Aquiles-ai" target="_blank" class="mobile-menu-link block px-3 py-2 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors font-inter">GitHub</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="flex">
+    <!-- Layout Container -->
+    <div class="flex pt-16 max-w-8xl mx-auto">
+        
         <!-- Sidebar -->
-        <nav class="hidden lg:block w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200 fixed h-full overflow-y-auto" style="top: 64px;">
-            <div class="p-6 space-y-6">
-                <div>
-                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Guides</div>
-                    <a href="#" class="nav-link active block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="index">Introduction</a>
-                    <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="installation">Installation</a>
+        <nav class="hidden lg:block w-72 fixed h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-200 bg-white/50 backdrop-blur-sm pb-10 z-40 custom-scrollbar">
+            <div class="p-6 space-y-8">
+                <!-- Navigation Structure -->
+                <div class="nav-group">
+                    <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 font-inter">Getting Started</h5>
+                    <div class="space-y-1">
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2 active" data-doc="index">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            <span>Introduction</span>
+                        </button>
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2" data-doc="installation">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Installation</span>
+                        </button>
+                    </div>
                 </div>
-                
-                <div>
-                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Reference</div>
-                    <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="api">API</a>
+
+                <div class="nav-group">
+                    <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 font-inter">Deploy & Operations</h5>
+                    <div class="space-y-1">
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2" data-doc="deploy">
+                            <i data-lucide="cloud" class="w-4 h-4"></i>
+                            <span>Deployment Guide</span>
+                        </button>
+                    </div>
                 </div>
-                
-                <div>
-                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Deploy Aquiles-RAG</div>
-                    <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="deploy">Deploy</a>
-                </div>
-                
-                <div>
-                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">API Client</div>
-                    <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="client">Aquiles-RAG Client - Py</a>
-                    <a href="#" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter" data-doc="asynclient">Aquiles-RAG Async Client - Py</a>
-                </div>
-                
-                <div>
-                    <div class="text-sm font-medium text-gray-500 mb-3 font-inter">Community</div>
-                    <a href="https://github.com/Aquiles-ai" target="_blank" class="nav-link block px-3 py-2 rounded-lg transition-colors font-inter">GitHub</a>
+
+                <div class="nav-group">
+                    <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 font-inter">API Reference</h5>
+                    <div class="space-y-1">
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2" data-doc="api">
+                            <i data-lucide="server" class="w-4 h-4"></i>
+                            <span>REST API</span>
+                        </button>
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2" data-doc="client">
+                            <i data-lucide="terminal" class="w-4 h-4"></i>
+                            <span>Python Client</span>
+                        </button>
+                        <button class="nav-link w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center space-x-2" data-doc="asynclient">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Async Client</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-1">
-            <div class="lg:ml-80 xl:mr-64">
-                <div class="max-w-4xl mx-auto px-6 py-8">
-                    <div id="content" class="content bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 lg:p-12">
-                        <div class="loading">Loading documentation...</div>
+        <main class="flex-1 lg:ml-72 xl:mr-64 min-w-0 z-10 relative">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+                <!-- Breadcrumbs -->
+                <nav class="flex mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-2">
+                        <li><span class="text-gray-400">Docs</span></li>
+                        <li><span class="text-gray-300">/</span></li>
+                        <li class="text-purple-600 font-medium" id="breadcrumb-current">Introduction</li>
+                    </ol>
+                </nav>
+
+                <!-- Dynamic Content Container -->
+                <div id="content" class="content bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm border border-white/50 p-8 lg:p-12 animate-fade-in ring-1 ring-gray-900/5 min-h-[500px]">
+                    <div class="loading">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mb-4"></div>
+                        <p>Loading Aquiles-RAG documentation...</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-16 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
+                    <p>&copy; 2024 Aquiles AI. MIT License.</p>
+                    <div class="flex space-x-6 mt-4 sm:mt-0">
+                        <a href="https://github.com/Aquiles-ai" class="hover:text-purple-600 transition-colors">GitHub</a>
+                        <a href="#" class="hover:text-purple-600 transition-colors">Issues</a>
+                        <a href="#" class="hover:text-purple-600 transition-colors">Community</a>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Page Navigation -->
-        <aside class="page-nav hidden xl:block w-64 fixed right-0 h-full overflow-y-auto bg-white/50 backdrop-blur-sm border-l border-gray-200" style="top: 64px;">
-            <div class="p-6">
-                <div class="page-nav-header text-sm font-medium text-gray-500 mb-4 font-inter">On this page</div>
-                <div id="page-nav-links" class="space-y-2">
-                    <!-- Page navigation links will be generated here -->
-                </div>
+        <!-- Table of Contents -->
+        <aside class="hidden xl:block w-64 fixed right-0 h-[calc(100vh-4rem)] overflow-y-auto z-30 pt-8 pr-8 custom-scrollbar">
+            <div class="p-4 border-l border-gray-200">
+                <h6 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 font-inter">On this page</h6>
+                <nav id="page-nav" class="space-y-2">
+                    <!-- JS will populate this -->
+                </nav>
             </div>
         </aside>
     </div>
 
-    <!-- Footer -->
-    <footer class="relative z-10 bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-16">
-        <div class="lg:ml-80 xl:mr-64">
-            <div class="max-w-4xl mx-auto px-6 py-8">
-                <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8">
-                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" rel="noopener noreferrer" class="group flex items-center space-x-3 text-gray-600 hover:text-purple-600 transition-colors duration-300">
-                        <i data-lucide="github" class="w-5 h-5 group-hover:scale-110 transition-transform duration-300"></i>
-                        <span class="font-inter font-medium">Aquiles-RAG</span>
-                    </a>
-                </div>
-                <div class="text-center mt-6">
-                    <p class="font-bold font-lora text-gray-900 mb-2">Aquiles-RAG <span class="text-purple-600">Documentation</span></p>
-                    <p class="text-sm text-gray-500 font-inter">Powerful Retrieval-Augmented Generation system</p>
-                </div>
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/20 backdrop-blur-sm transition-opacity opacity-0" id="mobile-backdrop"></div>
+        <div class="fixed inset-y-0 left-0 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" id="mobile-panel">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <span class="font-lora font-bold text-lg text-gray-900">Navigation</span>
+                <button id="close-mobile-menu" class="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div id="mobile-nav-content"></div>
             </div>
         </div>
-    </footer>
+    </div>
 
-    <script src="js/docs.js"></script>
-    <script src="js/search.js"></script>
+    <!-- Libraries (Load First) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Application Scripts (Load After Libraries) -->
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+        // Esperar a que todas las librerías estén cargadas
+        function initializeApp() {
+            // Verificar que las librerías necesarias estén disponibles
+            if (typeof marked === 'undefined' || typeof Prism === 'undefined' || typeof lucide === 'undefined') {
+                console.error('X Error: Librerías no cargadas correctamente');
+                setTimeout(initializeApp, 100); // Reintentar
+                return;
+            }
 
-        // Add active state styles
-        document.addEventListener('DOMContentLoaded', function() {
-            // Style nav links
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                if (!link.classList.contains('active')) {
-                    link.classList.add('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
-                } else {
-                    link.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
+            // Configurar marked
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                highlight: function(code, lang) {
+                    const language = Prism.languages[lang] || Prism.languages.clike;
+                    return Prism.highlight(code, language, lang);
                 }
             });
 
-            // Update active states when clicking nav links
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    // Remove active from all
-                    navLinks.forEach(l => {
-                        l.classList.remove('bg-purple-100', 'text-purple-700', 'font-medium');
-                        l.classList.add('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
-                    });
-                    
-                    // Add active to clicked
-                    this.classList.remove('text-gray-700', 'hover:bg-purple-50', 'hover:text-purple-700');
-                    this.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
-                });
-            });
+            // Inicializar iconos de Lucide
+            lucide.createIcons();
 
-            // Page nav link styles
-            const pageNavLinks = document.querySelectorAll('.page-nav-link');
-            pageNavLinks.forEach(link => {
-                link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'hover:text-purple-600', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300');
-            });
-        });
-
-        // Mobile menu functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const closeMenuButton = document.getElementById('close-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-
-            if (!mobileMenuButton || !closeMenuButton || !mobileMenu) return;
-
-            let isOpen = false;
-
-            const openMenu = () => {
-                mobileMenu.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                mobileMenuButton.setAttribute('aria-expanded', 'true');
-                mobileMenu.setAttribute('aria-hidden', 'false');
-                isOpen = true;
-            };
-
-            const closeMenu = () => {
-                mobileMenu.classList.add('hidden');
-                document.body.style.overflow = '';
-                mobileMenuButton.setAttribute('aria-expanded', 'false');
-                mobileMenu.setAttribute('aria-hidden', 'true');
-                isOpen = false;
-            };
-
-            const toggleMenu = () => {
-                if (isOpen) {
-                    closeMenu();
-                } else {
-                    openMenu();
-                }
-            };
-
-            mobileMenuButton.addEventListener('click', toggleMenu);
-            closeMenuButton.addEventListener('click', toggleMenu);
-
-            // Close menu when clicking outside
-            mobileMenu.addEventListener('click', (e) => {
-                if (e.target === mobileMenu) {
-                    closeMenu();
-                }
-            });
-
-            // Close menu on window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 1024 && isOpen) {
-                    closeMenu();
-                }
-            });
-
-            // Close menu with Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isOpen) {
-                    closeMenu();
-                }
-            });
-
-            // Close menu when clicking mobile menu links
-            document.querySelectorAll('#mobile-menu a').forEach(link => {
-                link.addEventListener('click', closeMenu);
-            });
-        });
-
-        // Page nav active state observer
-        document.addEventListener('DOMContentLoaded', function() {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList' && mutation.target.id === 'page-nav-links') {
-                        // Style new page nav links
-                        const pageNavLinks = document.querySelectorAll('.page-nav-link');
-                        pageNavLinks.forEach(link => {
-                            link.classList.add('block', 'px-3', 'py-1', 'text-sm', 'text-gray-600', 'hover:text-purple-600', 'transition-colors', 'font-inter', 'border-l-2', 'border-transparent', 'hover:border-purple-300');
-                            
-                            // Active state
-                            if (link.classList.contains('active')) {
-                                link.classList.add('text-purple-600', 'border-purple-500', 'font-medium');
-                                link.classList.remove('text-gray-600', 'border-transparent');
-                            }
-                        });
+            // Cargar scripts de la aplicación
+            loadScript('docs.js', function() {
+                loadScript('search.js', function() {
+                    // Iniciar búsqueda después de que docs.js esté listo
+                    if (typeof initSearch === 'function') {
+                        initSearch();
                     }
                 });
             });
+        }
 
-            observer.observe(document.getElementById('page-nav-links'), {
-                childList: true,
-                subtree: true
-            });
+        // Función para cargar scripts dinámicamente
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = callback;
+            script.onerror = function() {
+                console.error('X Error al cargar script:', src);
+            };
+            document.body.appendChild(script);
+        }
+
+        // Iniciar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // Mobile Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+            function openMobileMenu() {
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    mobileBackdrop.classList.remove('opacity-0');
+                    document.getElementById('mobile-panel').classList.remove('-translate-x-full');
+                }, 10);
+            }
+
+            function closeMobileMenuFn() {
+                mobileBackdrop.classList.add('opacity-0');
+                document.getElementById('mobile-panel').classList.add('-translate-x-full');
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            }
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileMenu);
+            if (closeMobileMenu) closeMobileMenu.addEventListener('click', closeMobileMenuFn);
+            if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobileMenuFn);
         });
     </script>
 </body>

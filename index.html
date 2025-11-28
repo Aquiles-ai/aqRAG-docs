@@ -440,102 +440,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Application Scripts -->
+    <!-- Application Initialization -->
     <script>
-        // Variable global para indicar que las librerías están listas
-        window.appLibrariesLoaded = false;
-
-        // Función para verificar si las librerías están cargadas
-        function checkLibrariesLoaded() {
-            return typeof marked !== 'undefined' && 
-                   typeof Prism !== 'undefined' && 
-                   typeof lucide !== 'undefined';
-        }
-
         // Esperar a que todas las librerías estén cargadas
-        function waitForLibraries() {
-            return new Promise((resolve) => {
-                if (checkLibrariesLoaded()) {
-                    resolve();
-                    return;
-                }
-
-                const checkInterval = setInterval(() => {
-                    if (checkLibrariesLoaded()) {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 50);
-
-                // Timeout de 5 segundos
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                    if (!checkLibrariesLoaded()) {
-                        console.error('X Error: Timeout al cargar librerías');
-                    }
-                    resolve();
-                }, 5000);
-            });
-        }
-
-        // Inicializar aplicación
-        async function initializeApp() {
-            try {
-                // Esperar a que las librerías estén disponibles
-                await waitForLibraries();
-
-                if (!checkLibrariesLoaded()) {
-                    console.error('X Error: Librerías no cargadas correctamente');
-                    return;
-                }
-
-                // Configurar marked
-                marked.setOptions({
-                    gfm: true,
-                    breaks: true,
-                    highlight: function(code, lang) {
-                        const language = Prism.languages[lang] || Prism.languages.clike;
-                        return Prism.highlight(code, language, lang);
-                    }
-                });
-
-                // Inicializar iconos de Lucide
-                lucide.createIcons();
-
-                // Marcar que las librerías están listas
-                window.appLibrariesLoaded = true;
-
-                // Cargar scripts de la aplicación secuencialmente
-                await loadScriptAsync('js/search.js');
-                await loadScriptAsync('js/docs.js');
-
-                // Inicializar search después de que ambos scripts estén cargados
-                if (typeof initSearch === 'function') {
-                    initSearch();
-                }
-
-                console.log('Aplicación inicializada correctamente');
-
-            } catch (error) {
-                console.error('X Error al inicializar la aplicación:', error);
+        function initializeApp() {
+            // Verificar que las librerías necesarias estén disponibles
+            if (typeof marked === 'undefined' || typeof Prism === 'undefined' || typeof lucide === 'undefined') {
+                console.error('X Error: Librerías no cargadas correctamente');
+                setTimeout(initializeApp, 100);
+                return;
             }
-        }
 
-        // Función para cargar scripts de forma asíncrona con Promise
-        function loadScriptAsync(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => {
-                    console.log(`Script cargado: ${src}`);
-                    resolve();
-                };
-                script.onerror = () => {
-                    console.error(`X Error al cargar script: ${src}`);
-                    reject(new Error(`Failed to load ${src}`));
-                };
-                document.body.appendChild(script);
+            // Configurar marked
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                highlight: function(code, lang) {
+                    const language = Prism.languages[lang] || Prism.languages.clike;
+                    return Prism.highlight(code, language, lang);
+                }
             });
+
+            // Inicializar iconos de Lucide
+            lucide.createIcons();
         }
 
         // Iniciar cuando el DOM esté listo
@@ -576,5 +503,8 @@
             if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobileMenuFn);
         });
     </script>
+    
+    <script src="js/search.js"></script>
+    <script src="js/docs.js"></script>
 </body>
 </html>

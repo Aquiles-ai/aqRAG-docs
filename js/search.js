@@ -1,217 +1,193 @@
-const DOC_FILENAMES = ['index', 'installation', 'client', 'asynclient', 'deploy', 'api'];
+/**
+ * docs.js
+ * Maneja la carga de archivos Markdown y la navegación.
+ * IMPORTANTE: Este script espera que search.js ya esté cargado.
+ */
 
-let docsContent = {}; 
-let searchIndex = [];
-let searchModal = null;
-let searchInput = null;
-let searchResults = null;
-
-function initSearch() {
-  createSearchModal();
-  setupEventListeners();
-  loadAllDocuments();
-}
-
-
-function createSearchModal() {
-    searchModal = document.createElement('div');
-    searchModal.className = 'search-modal';
-    searchModal.style.display = 'none';
-
-    const modalContent = `
-        <div class="search-modal-content">
-            <div class="search-header">
-                <input type="text" class="search-modal-input" placeholder="Buscar documentación...">
-                <button class="search-close-btn">×</button>
-            </div>
-            <div class="search-results"></div>
-        </div>
-    `;
-
-    searchModal.innerHTML = modalContent;
-    document.body.appendChild(searchModal);
-
-    searchInput = searchModal.querySelector('.search-modal-input');
-    searchResults = searchModal.querySelector('.search-results');
-    
-    searchModal.querySelector('.search-close-btn').addEventListener('click', closeSearch);
-}
-
-
-function setupEventListeners() {
-    document.getElementById('open-search-desktop').addEventListener('click', openSearch);
-    document.getElementById('open-search-mobile').addEventListener('click', openSearch);
-
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            if (searchModal.style.display === 'block') {
-                closeSearch();
-            } else {
-                openSearch();
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar a que las librerías estén disponibles
+    if (!window.appLibrariesLoaded) {
+        console.log('Esperando a que las librerías se carguen...');
+        const checkInterval = setInterval(() => {
+            if (window.appLibrariesLoaded) {
+                clearInterval(checkInterval);
+                initializeDocs();
             }
-        } else if (e.key === 'Escape' && searchModal.style.display === 'block') {
-            closeSearch();
-        }
-    });
-
-    searchInput.addEventListener('input', runSearch);
-}
-
-
-function loadAllDocuments() {
-    console.log(`[Search] Indexando ${DOC_FILENAMES.length} documentos...`);
-    
-    const fetchPromises = DOC_FILENAMES.map(filename => 
-        fetch(`docs/${filename}.md`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Error loading ${filename}.md`);
-                return response.text();
-            })
-            .then(markdownText => {
-                docsContent[filename] = markdownText;
-                
-                indexDocumentContent(filename, markdownText);
-            })
-            .catch(error => {
-                console.error(`[Search] Error indexing ${filename}:`, error.message);
-            })
-    );
-
-    Promise.all(fetchPromises).then(() => {
-        console.log(`[Search] Indexación completa. ${searchIndex.length} secciones indexadas.`)
-    });
-}
-
-
-function indexDocumentContent(filename, markdownText) {
-    const h1Match = markdownText.match(/^#\s+(.*)/m);
-    const documentTitle = h1Match ? h1Match[1].trim() : filename.charAt(0).toUpperCase() + filename.slice(1);
-
-    const sections = markdownText.split(/^(##\s+.*|###\s+.*)/gm).filter(s => s.trim() !== '');
-
-    searchIndex = searchIndex.filter(item => item.filename !== filename);
-
-    let currentTitle = documentTitle;
-
-    for (let i = 0; i < sections.length; i++) {
-        const section = sections[i].trim();
-        
-        if (section.startsWith('## ') || section.startsWith('### ')) {
-            currentTitle = section.replace(/^(##|###)\s*/, '').trim();
-            const nextContent = sections[i + 1] ? sections[i + 1].trim() : '';
-
-            const cleanContent = nextContent
-                .replace(/```[\s\S]*?```/g, '')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
-                .replace(/<[^>]*>/g, '')
-                .replace(/\s+/g, ' ');
-
-            if (cleanContent.length > 10) {
-                searchIndex.push({
-                    filename: filename,
-                    title: currentTitle,
-                    context: cleanContent,
-                    content: (currentTitle + ' ' + cleanContent).toLowerCase()
-                });
-            }
-            i++;
-        } else {
-            const cleanContent = section
-                .replace(/```[\s\S]*?```/g, '')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
-                .replace(/<[^>]*>/g, '')
-                .replace(/\s+/g, ' ');
-            
-            if (cleanContent.length > 10 && searchIndex.filter(item => item.filename === filename && item.title === documentTitle).length === 0) {
-                 searchIndex.push({
-                    filename: filename,
-                    title: documentTitle,
-                    context: cleanContent.substring(0, 300) + (cleanContent.length > 300 ? '...' : ''), // Snippet del inicio
-                    content: cleanContent.toLowerCase()
-                });
-            }
-        }
+        }, 100);
+    } else {
+        initializeDocs();
     }
+});
+
+function initializeDocs() {
+    // Definir la página de inicio por defecto
+    loadMarkdown('index');
+    
+    // Configurar navegación principal
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('target') === '_blank') {
+                return; // Permite que el enlace funcione normalmente
+            }
+
+            e.preventDefault();
+            const docName = this.getAttribute('data-doc');
+            loadMarkdown(docName);
+            
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Cerrar el modal de búsqueda si está abierto
+            // Verificar que la función exista antes de llamarla
+            if (typeof closeSearch === 'function') {
+                closeSearch();
+            }
+        });
+    });
 }
 
-
-function openSearch() {
-    searchModal.style.display = 'block';
-    searchInput.value = '';
-    searchResults.innerHTML = '<p class="text-gray-500 p-2">Escribe para empezar a buscar...</p>';
-    setTimeout(() => searchInput.focus(), 100);
-}
-
-
-function closeSearch() {
-    searchModal.style.display = 'none';
-}
-
-
-function runSearch() {
-    const query = searchInput.value.trim().toLowerCase();
-    searchResults.innerHTML = '';
-
-    if (query.length < 2) {
-        searchResults.innerHTML = '<p class="text-gray-500 p-2">Escribe al menos 2 caracteres.</p>';
+/**
+ * Carga un archivo Markdown y lo renderiza.
+ * @param {string} filename El nombre del archivo (ej: 'installation').
+ */
+function loadMarkdown(filename) {
+    const contentElement = document.getElementById('content');
+    if (!contentElement) {
+        console.error('X Error: Elemento #content no encontrado');
         return;
     }
 
-    const matchedResults = searchIndex.filter(item => item.content.includes(query));
-
-    if (matchedResults.length === 0) {
-        searchResults.innerHTML = `<p class="text-gray-500 p-2">No se encontraron resultados para "${searchInput.value}".</p>`;
-    } else {
-        renderResults(matchedResults, query);
+    contentElement.innerHTML = '<div class="loading"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mb-4"></div><p>Cargando documentación...</p></div>';
+    
+    // Actualizar breadcrumb
+    const breadcrumb = document.getElementById('breadcrumb-current');
+    if (breadcrumb) {
+        const titles = {
+            'index': 'Introduction',
+            'installation': 'Installation',
+            'deploy': 'Deployment',
+            'api': 'REST API',
+            'client': 'Python Client',
+            'asynclient': 'Async Client'
+        };
+        breadcrumb.textContent = titles[filename] || filename;
     }
-}
+    
+    // Cargar el archivo Markdown
+    fetch(`docs/${filename}.md`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to load file: docs/${filename}.md (Status: ${response.status})`);
+            }
+            return response.text();
+        })
+        .then(markdownText => {
+            // Verificar que marked esté disponible
+            if (typeof marked === 'undefined') {
+                throw new Error('Marked library not loaded');
+            }
 
+            // Convertir Markdown a HTML
+            const htmlContent = marked.parse(markdownText);
+            
+            // Renderizar el contenido
+            contentElement.innerHTML = htmlContent;
 
-function renderResults(results, query) {
-    results.slice(0, 10).forEach(match => {
-        const resultElement = document.createElement('div');
-        resultElement.className = 'search-result';
-        const matchIndex = match.context.toLowerCase().indexOf(query);
-        let contextSnippet = match.context;
+            // Volver al inicio de la página y generar la navegación lateral
+            window.scrollTo(0, 0);
+            generatePageNavigation();
 
-        if (matchIndex !== -1) {
-             const start = Math.max(0, matchIndex - 50); 
-             const end = Math.min(match.context.length, matchIndex + query.length + 100); 
-             contextSnippet = '...' + match.context.substring(start, end) + '...';
-        } else {
-             contextSnippet = match.context.substring(0, 150) + (match.context.length > 150 ? '...' : '');
-        }
+            // Reinicializar iconos de Lucide en el nuevo contenido
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
 
-        const regex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
-        const highlightedContext = contextSnippet.replace(
-            regex,
-            match => `<span class="search-highlight">${match}</span>`
-        );
+            // Actualizar el índice de búsqueda si la función existe
+            if (typeof indexDocumentContent === 'function') {
+                indexDocumentContent(filename, markdownText);
+            }
 
-        resultElement.innerHTML = `
-            <div class="search-result-title">${match.title} (${match.filename})</div>
-            <div class="search-result-context">${highlightedContext}</div>
-        `;
-
-        resultElement.addEventListener('click', () => {
-            navigateToResult(match.filename, match.title);
-            closeSearch();
+        })
+        .catch(error => {
+            console.error('X Error al cargar Markdown:', error);
+            contentElement.innerHTML = `<div class="p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <h2 class="text-xl font-bold mb-2">Error al cargar el documento</h2>
+                <p>No se pudo encontrar el archivo <code>docs/${filename}.md</code>. Por favor, asegúrate de que el archivo existe en la carpeta <code>docs/</code>.</p>
+                <p class="mt-2 text-sm">${error.message}</p>
+            </div>`;
         });
-
-        searchResults.appendChild(resultElement);
-    });
 }
 
-function navigateToResult(filename, title) {
-    loadMarkdown(filename);
+/**
+ * Genera la navegación lateral de la página (Table of Contents).
+ */
+function generatePageNavigation() {
+    const contentElement = document.getElementById('content');
+    const pageNavLinks = document.getElementById('page-nav');
+    
+    if (!contentElement || !pageNavLinks) return;
+    
+    pageNavLinks.innerHTML = '';
 
-    setTimeout(() => {
-        const headings = document.querySelectorAll('#content h1, #content h2, #content h3');
-        headings.forEach(heading => {
-            if (heading.textContent.trim() === title) {
-                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Seleccionar todos los encabezados H2 y H3 dentro del contenido
+    const headings = contentElement.querySelectorAll('h2, h3');
+    
+    if (headings.length === 0) {
+        pageNavLinks.innerHTML = '<p class="text-sm text-gray-400 p-2">No hay secciones.</p>';
+        return;
+    }
+
+    headings.forEach((heading, index) => {
+        // Asegurar que cada encabezado tenga un ID
+        if (!heading.id) {
+            heading.id = heading.textContent.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') + '-' + index;
+        }
+        
+        const link = document.createElement('a');
+        link.href = '#' + heading.id;
+        link.textContent = heading.textContent;
+        link.className = 'page-nav-link';
+        
+        // Ajustar el estilo de anidación para H3
+        if (heading.tagName === 'H3') {
+            link.style.paddingLeft = '1.5rem';
+            link.style.fontSize = '0.85rem';
+        }
+        
+        // Manejador de clic para desplazamiento suave
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetHeading = document.getElementById(heading.id);
+            if (targetHeading) {
+                targetHeading.scrollIntoView({ behavior: 'smooth' });
+                
+                // Actualizar link activo
+                document.querySelectorAll('#page-nav .page-nav-link').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
             }
         });
-    }, 200);
+        
+        pageNavLinks.appendChild(link);
+    });
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                document.querySelectorAll('#page-nav .page-nav-link').forEach(a => {
+                    a.classList.remove('active');
+                    if (a.getAttribute('href') === '#' + id) {
+                        a.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '-20% 0px -80% 0px' });
+    
+    headings.forEach(heading => {
+        observer.observe(heading);
+    });
 }

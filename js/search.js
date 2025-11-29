@@ -1,6 +1,5 @@
-
 const DOC_FILENAMES = ['index', 'installation', 'client', 'asynclient', 'deploy', 'api'];
-let docsContent = {}; 
+let docsContent = {};
 let searchIndex = [];
 let searchModal = null;
 let searchInput = null;
@@ -12,68 +11,103 @@ function initSearch() {
     loadAllDocuments();
 }
 
-
 function createSearchModal() {
+    // Create modal element with Tailwind classes
     searchModal = document.createElement('div');
-    searchModal.className = 'search-modal';
-    searchModal.style.display = 'none';
+    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4';
+    searchModal.setAttribute('aria-hidden', 'true');
 
-    const modalContent = `
-        <div class="search-modal-content">
-            <div class="search-header">
-                <input type="text" class="search-modal-input" placeholder="Search for documentation...">
-                <button class="search-close-btn">ESC</button>
-            </div>
-            <div class="search-results"></div>
+    const modalContent = document.createElement('div');
+    modalContent.className = 'w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden';
+    modalContent.innerHTML = `
+        <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+            <input type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 search-modal-input" placeholder="Search for documentation...">
+            <button type="button" class="px-3 py-1 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 search-close-btn">Esc</button>
         </div>
+        <div class="max-h-80 overflow-y-auto p-4 search-results bg-white"></div>
     `;
 
-    searchModal.innerHTML = modalContent;
+    searchModal.appendChild(modalContent);
     document.body.appendChild(searchModal);
 
+    // Hook elements
     searchInput = searchModal.querySelector('.search-modal-input');
     searchResults = searchModal.querySelector('.search-results');
-    
-    searchModal.querySelector('.search-close-btn').addEventListener('click', closeSearch);
+
+    // Close button
+    searchModal.querySelector('.search-close-btn').addEventListener('click', () => closeSearch());
+
+    // Click outside to close
+    searchModal.addEventListener('click', function (e) {
+        if (e.target === searchModal) closeSearch();
+    });
+
+    // Enter & navigation handling inside input
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+        }
+    });
+
+    // Add a minimal highlight style using Tailwind-compatible classes produced inline
 }
 
 function setupEventListeners() {
-    const openDesktop = document.getElementById('open-search-desktop');
-    const openMobile = document.getElementById('open-search-mobile');
-    
-    if (openDesktop) openDesktop.addEventListener('click', openSearch);
-    if (openMobile) openMobile.addEventListener('click', openSearch);
-
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    // Integrate with header search input (if present)
+    const headerSearch = document.querySelector('.search-input');
+    if (headerSearch) {
+        headerSearch.addEventListener('click', (e) => {
             e.preventDefault();
-            if (searchModal && searchModal.style.display === 'block') {
-                closeSearch();
-            } else {
-                openSearch();
-            }
-        } else if (e.key === 'Escape' && searchModal && searchModal.style.display === 'block') {
+            openSearch();
+        });
+
+        // Allow pressing any key while header input is focused to open modal and type
+        headerSearch.addEventListener('keydown', (e) => {
+            // Let Ctrl/Cmd+K be handled globally
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') return;
+
+            openSearch();
+            // Delay a little then set the modal input value to what user typed (if printable)
+            setTimeout(() => {
+                searchInput.focus();
+                if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                    searchInput.value = e.key;
+                    runSearch();
+                }
+            }, 60);
+        });
+    }
+
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', function (e) {
+        // Ctrl/Cmd + K to open search
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (searchModal && !isModalOpen()) openSearch();
+            else if (searchModal && isModalOpen()) closeSearch();
+            return;
+        }
+
+        // Escape closes modal
+        if (e.key === 'Escape' && isModalOpen()) {
             closeSearch();
         }
     });
 
+    // Input typing
     if (searchInput) {
-        searchInput.addEventListener('input', runSearch);
+        searchInput.addEventListener('input', debounce(runSearch, 180));
     }
+}
 
-    if (searchModal) {
-        searchModal.addEventListener('click', function(e) {
-            if (e.target === searchModal) {
-                closeSearch();
-            }
-        });
-    }
+function isModalOpen() {
+    return searchModal && !searchModal.classList.contains('hidden');
 }
 
 function loadAllDocuments() {
     console.log(`Indexando ${DOC_FILENAMES.length} documentos...`);
-    
-    const fetchPromises = DOC_FILENAMES.map(filename => 
+
+    const fetchPromises = DOC_FILENAMES.map(filename =>
         fetch(`docs/${filename}.md`)
             .then(response => {
                 if (!response.ok) throw new Error(`Error loading ${filename}.md`);
@@ -96,25 +130,27 @@ function loadAllDocuments() {
 function indexDocumentContent(filename, markdownText) {
     const h1Match = markdownText.match(/^#\s+(.*)/m);
     const documentTitle = h1Match ? h1Match[1].trim() : filename.charAt(0).toUpperCase() + filename.slice(1);
-    
-    const sections = markdownText.split(/^(##\s+.*|###\s+.*)/gm).filter(s => s.trim() !== '');
 
+    // Split by headings: keep headings in array
+    const sections = markdownText.split(/(^##\s+.*$|^###\s+.*$)/m).map(s => s || '').filter(s => s.trim() !== '');
+
+    // Remove existing entries for this filename
     searchIndex = searchIndex.filter(item => item.filename !== filename);
 
     let currentTitle = documentTitle;
 
     for (let i = 0; i < sections.length; i++) {
-        const section = sections[i].trim();
-        
-        if (section.startsWith('## ') || section.startsWith('### ')) {
-            currentTitle = section.replace(/^(##|###)\s*/, '').trim();
+        const part = sections[i].trim();
+        if (/^##\s+/.test(part) || /^###\s+/.test(part)) {
+            currentTitle = part.replace(/^(##|###)\s*/, '').trim();
             const nextContent = sections[i + 1] ? sections[i + 1].trim() : '';
 
             const cleanContent = nextContent
                 .replace(/```[\s\S]*?```/g, '')
                 .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
                 .replace(/<[^>]*>/g, '')
-                .replace(/\s+/g, ' ');
+                .replace(/\s+/g, ' ')
+                .trim();
 
             if (cleanContent.length > 10) {
                 searchIndex.push({
@@ -124,16 +160,17 @@ function indexDocumentContent(filename, markdownText) {
                     content: (currentTitle + ' ' + cleanContent).toLowerCase()
                 });
             }
-            i++;
+            i++; // skip content that was consumed
         } else {
-            const cleanContent = section
+            const cleanContent = part
                 .replace(/```[\s\S]*?```/g, '')
                 .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
                 .replace(/<[^>]*>/g, '')
-                .replace(/\s+/g, ' ');
-            
-            if (cleanContent.length > 10 && searchIndex.filter(item => item.filename === filename && item.title === documentTitle).length === 0) {
-                 searchIndex.push({
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (cleanContent.length > 10 && !searchIndex.some(item => item.filename === filename && item.title === documentTitle)) {
+                searchIndex.push({
                     filename: filename,
                     title: documentTitle,
                     context: cleanContent.substring(0, 300) + (cleanContent.length > 300 ? '...' : ''),
@@ -149,38 +186,43 @@ function openSearch() {
         console.error('X Error: Modal de búsqueda no inicializado');
         return;
     }
-    searchModal.style.display = 'flex';
+
+    searchModal.classList.remove('hidden');
+    searchModal.classList.add('flex');
+    searchModal.setAttribute('aria-hidden', 'false');
+
     if (searchInput) {
         searchInput.value = '';
-        setTimeout(() => searchInput.focus(), 100);
+        setTimeout(() => searchInput.focus(), 60);
     }
+
     if (searchResults) {
         searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Escribe para empezar a buscar...</p>';
     }
 }
 
-
 function closeSearch() {
     if (!searchModal) return;
-    searchModal.style.display = 'none';
+    searchModal.classList.add('hidden');
+    searchModal.classList.remove('flex');
+    searchModal.setAttribute('aria-hidden', 'true');
 }
-
 
 function runSearch() {
     if (!searchInput || !searchResults) return;
-    
+
     const query = searchInput.value.trim().toLowerCase();
     searchResults.innerHTML = '';
 
     if (query.length < 2) {
-        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Write at least 2 characters.</p>';
+        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Escribe al menos 2 caracteres.</p>';
         return;
     }
 
     const matchedResults = searchIndex.filter(item => item.content.includes(query));
 
     if (matchedResults.length === 0) {
-        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No results were found for "${searchInput.value}".</p>`;
+        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No se encontraron resultados para "${escapeHtml(searchInput.value)}".</p>`;
     } else {
         renderResults(matchedResults, query);
     }
@@ -188,31 +230,34 @@ function runSearch() {
 
 function renderResults(results, query) {
     if (!searchResults) return;
-    
+
+    // clear
+    searchResults.innerHTML = '';
+
     results.slice(0, 10).forEach(match => {
         const resultElement = document.createElement('div');
-        resultElement.className = 'search-result';
+        resultElement.className = 'p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-100 mb-2';
 
         const matchIndex = match.context.toLowerCase().indexOf(query);
         let contextSnippet = match.context;
 
         if (matchIndex !== -1) {
-             const start = Math.max(0, matchIndex - 50);
-             const end = Math.min(match.context.length, matchIndex + query.length + 100);
-             contextSnippet = '...' + match.context.substring(start, end) + '...';
+            const start = Math.max(0, matchIndex - 50);
+            const end = Math.min(match.context.length, matchIndex + query.length + 100);
+            contextSnippet = (start > 0 ? '...' : '') + match.context.substring(start, end) + (end < match.context.length ? '...' : '');
         } else {
-             contextSnippet = match.context.substring(0, 150) + (match.context.length > 150 ? '...' : '');
+            contextSnippet = match.context.substring(0, 150) + (match.context.length > 150 ? '...' : '');
         }
 
-        const regex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
-        const highlightedContext = contextSnippet.replace(
-            regex,
-            match => `<span class="search-highlight">${match}</span>`
-        );
+        const regex = new RegExp(escapeRegExp(query), 'gi');
+        const highlightedContext = escapeHtml(contextSnippet).replace(regex, (m) => `<span class="px-1 rounded bg-yellow-100 text-yellow-800">${m}</span>`);
 
         resultElement.innerHTML = `
-            <div class="search-result-title">${match.title} <span style="color: #9ca3af; font-size: 0.85em;">(${match.filename})</span></div>
-            <div class="search-result-context">${highlightedContext}</div>
+            <div class="flex items-baseline justify-between">
+                <div class="font-medium text-sm text-gray-800">${escapeHtml(match.title)}</div>
+                <div class="text-xs text-gray-400">${escapeHtml(match.filename)}</div>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">${highlightedContext}</div>
         `;
 
         resultElement.addEventListener('click', () => {
@@ -228,17 +273,56 @@ function navigateToResult(filename, title) {
     if (typeof loadMarkdown === 'function') {
         loadMarkdown(filename);
 
-        setTimeout(() => {
-            const headings = document.querySelectorAll('#content h1, #content h2, #content h3');
-            headings.forEach(heading => {
-                if (heading.textContent.trim() === title) {
+        // Wait until content area is updated. loadMarkdown doesn't return a promise,
+        // so use a MutationObserver to detect changes and then scroll to the heading.
+        const contentEl = document.getElementById('content');
+        if (!contentEl) return;
+
+        const observer = new MutationObserver((mutations, obs) => {
+            // try to scroll to matching heading
+            const headings = contentEl.querySelectorAll('h1, h2, h3');
+            for (const heading of headings) {
+                if (heading.textContent && heading.textContent.trim() === title) {
                     heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    obs.disconnect();
+                    return;
                 }
-            });
-        }, 300);
+            }
+
+            // if not found after a short while, give up
+            // (we keep observing but add a timeout cleanup)
+        });
+
+        observer.observe(contentEl, { childList: true, subtree: true });
+
+        // safety timeout to disconnect observer after 2.5s
+        setTimeout(() => observer.disconnect(), 2500);
     }
 }
 
+// Utility helpers
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function debounce(fn, wait) {
+    let t = null;
+    return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
+// Init on DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSearch);
 } else {

@@ -292,13 +292,15 @@
     <header class="relative z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
+            
+            <!-- Left side -->
                 <div class="flex items-center space-x-4">
+                <!-- Mobile menu btn -->
                     <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Toggle mobile menu">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
 
-                    <a href="#" class="flex items-center space-x-2 animate-float" onclick="event.preventDefault(); loadMarkdown('index');">
-                        <img src="static/aq-fav.png" alt="Aquiles-RAG" class="w-8 h-8 rounded-lg">
+                    <a href="#" class="flex items-center space-x-2" onclick="event.preventDefault(); loadMarkdown('index');">
                         <div>
                             <h1 class="text-xl font-bold font-lora">
                                 <span class="text-gray-900">Aquiles</span><span class="text-purple-600">-RAG</span>
@@ -308,17 +310,22 @@
                     </a>
                 </div>
 
-                <!-- Search -->
+            <!-- Search -->
                 <div class="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
                     <div class="relative w-full">
-                        <input type="text" placeholder="Search documentation..." class="search-input w-full px-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter text-sm">
-                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">Ctrl K</span>
+                        <input type="text" 
+                            placeholder="Search documentation..." 
+                            class="search-input w-full px-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 font-inter text-sm">
+                        <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">
+                            Ctrl K
+                        </span>
                     </div>
                 </div>
 
-                <!-- Actions -->
+            <!-- Actions -->
                 <div class="flex items-center space-x-4">
-                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" class="hidden md:flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors font-inter font-medium">
+                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" 
+                        class="hidden md:flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-colors font-inter font-medium">
                         <i data-lucide="github" class="w-4 h-4"></i>
                         <span>GitHub</span>
                     </a>

@@ -14,7 +14,7 @@ function initSearch() {
 function createSearchModal() {
     // Create modal element with Tailwind classes
     searchModal = document.createElement('div');
-    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4';
+    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 top-16';
     searchModal.setAttribute('aria-hidden', 'true');
 
     const modalContent = document.createElement('div');
@@ -212,14 +212,14 @@ function runSearch() {
     searchResults.innerHTML = '';
 
     if (query.length < 2) {
-        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Escribe al menos 2 caracteres.</p>';
+        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Write at least 2 characters.</p>';
         return;
     }
 
     const matchedResults = searchIndex.filter(item => item.content.includes(query));
 
     if (matchedResults.length === 0) {
-        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No se encontraron resultados para "${escapeHtml(searchInput.value)}".</p>`;
+        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No results were found for "${escapeHtml(searchInput.value)}".</p>`;
     } else {
         renderResults(matchedResults, query);
     }

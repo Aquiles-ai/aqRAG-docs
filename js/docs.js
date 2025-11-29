@@ -11,13 +11,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const docName = this.getAttribute('data-doc');
             loadMarkdown(docName);
 
+            // Update active state
             document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
-            this.classList.add('active');
+            document.querySelectorAll(`.nav-link[data-doc="${docName}"]`).forEach(a => a.classList.add('active'));
 
+            // Close search if open
             if (typeof closeSearch === 'function') {
                 closeSearch();
             }
 
+            // Update breadcrumb
             const breadcrumb = document.getElementById('breadcrumb-current');
             if (breadcrumb) {
                 breadcrumb.textContent = this.textContent.trim();
@@ -25,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Clone navigation to mobile menu
     cloneMobileNavigation();
 });
 
@@ -34,7 +38,8 @@ function cloneMobileNavigation() {
     
     if (desktopNav && mobileNavContent) {
         mobileNavContent.innerHTML = desktopNav.innerHTML;
-
+        
+        // Add click handlers to mobile nav links
         mobileNavContent.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 if (this.getAttribute('target') === '_blank') {
@@ -46,14 +51,20 @@ function cloneMobileNavigation() {
                 loadMarkdown(docName);
 
                 // Close mobile menu
-                const closeMobileMenu = document.getElementById('close-mobile-menu');
-                if (closeMobileMenu) {
-                    closeMobileMenu.click();
-                }
+                const mobileBackdrop = document.getElementById('mobile-backdrop');
+                const panel = document.getElementById('mobile-panel');
+                if (mobileBackdrop) mobileBackdrop.classList.add('opacity-0');
+                if (panel) panel.classList.add('-translate-x-full');
+                setTimeout(() => {
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (mobileMenu) mobileMenu.classList.add('hidden');
+                }, 300);
 
+                // Update active state in both menus
                 document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
                 document.querySelectorAll(`.nav-link[data-doc="${docName}"]`).forEach(a => a.classList.add('active'));
 
+                // Update breadcrumb
                 const breadcrumb = document.getElementById('breadcrumb-current');
                 if (breadcrumb) {
                     breadcrumb.textContent = this.textContent.trim();
@@ -80,6 +91,7 @@ function loadMarkdown(filename) {
             return response.text();
         })
         .then(markdownText => {
+            // Configure marked
             marked.setOptions({
                 gfm: true,
                 breaks: true,
@@ -91,11 +103,14 @@ function loadMarkdown(filename) {
                 }
             });
 
+            // 1) Convert Markdown to HTML
             const rawHtml = marked.parse(markdownText);
 
+            // 2) Process and validate iframes
             const tmp = document.createElement('div');
             tmp.innerHTML = rawHtml;
 
+            // Filter iframes - only allow YouTube embeds
             tmp.querySelectorAll('iframe').forEach(iframe => {
                 try {
                     const src = iframe.getAttribute('src') || '';
@@ -115,11 +130,13 @@ function loadMarkdown(filename) {
                         return;
                     }
 
+                    // Set secure attributes
                     iframe.setAttribute('loading', 'lazy');
                     iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
                     iframe.setAttribute('allowfullscreen', '');
                     iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
 
+                    // Wrap in responsive container
                     const wrapper = document.createElement('div');
                     wrapper.className = 'video-wrapper';
                     iframe.parentNode.insertBefore(wrapper, iframe);
@@ -130,25 +147,32 @@ function loadMarkdown(filename) {
                 }
             });
 
+            // 3) Sanitize with DOMPurify
             const clean = DOMPurify.sanitize(tmp.innerHTML, {
                 ADD_TAGS: ['iframe'],
                 ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'loading', 'referrerpolicy', 'sandbox', 'src', 'width', 'height']
             });
 
+            // 4) Insert clean HTML
             contentElement.innerHTML = clean;
 
+            // 5) Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            // 6) Generate page navigation
             generatePageNavigation();
 
+            // 7) Highlight code blocks
             if (window.Prism) {
                 Prism.highlightAllUnder(contentElement);
             }
 
+            // 8) Index content for search (if search function exists)
             if (typeof indexDocumentContent === 'function') {
                 indexDocumentContent(filename, markdownText);
             }
 
+            // 9) Reinitialize Lucide icons
             if (window.lucide) {
                 lucide.createIcons();
             }

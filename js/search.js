@@ -4,7 +4,6 @@ let searchIndex = []
 let searchModal = null
 let searchInput = null
 let searchResults = null
-const loadMarkdown = null // Declare loadMarkdown variable
 
 function initSearch() {
   createSearchModal()
@@ -14,7 +13,7 @@ function initSearch() {
 
 function createSearchModal() {
   searchModal = document.createElement("div")
-  searchModal.className = "fixed inset-0 z-50 hidden items-start justify-center bg-black/50 p-4 pt-20"
+  searchModal.className = "fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
   searchModal.setAttribute("aria-hidden", "true")
 
   const modalContent = document.createElement("div")
@@ -30,19 +29,15 @@ function createSearchModal() {
   searchModal.appendChild(modalContent)
   document.body.appendChild(searchModal)
 
-  // Hook elements
   searchInput = searchModal.querySelector(".search-modal-input")
   searchResults = searchModal.querySelector(".search-results")
 
-  // Close button
   searchModal.querySelector(".search-close-btn").addEventListener("click", () => closeSearch())
 
-  // Click outside to close
   searchModal.addEventListener("click", (e) => {
     if (e.target === searchModal) closeSearch()
   })
 
-  // Enter & navigation handling inside input
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault()
@@ -279,15 +274,12 @@ function renderResults(results, query) {
 }
 
 function navigateToResult(filename, title) {
-  if (typeof loadMarkdown === "function") {
-    loadMarkdown(filename)
-    // Wait until content area is updated. loadMarkdown doesn't return a promise,
-    // so use a MutationObserver to detect changes and then scroll to the heading.
+  if (typeof window.loadMarkdown === "function") {
+    window.loadMarkdown(filename)
     const contentEl = document.getElementById("content")
     if (!contentEl) return
 
     const observer = new MutationObserver((mutations, obs) => {
-      // try to scroll to matching heading
       const headings = contentEl.querySelectorAll("h1, h2, h3")
       for (const heading of headings) {
         if (heading.textContent && heading.textContent.trim() === title) {
@@ -296,13 +288,9 @@ function navigateToResult(filename, title) {
           return
         }
       }
-      // if not found after a short while, give up
-      // (we keep observing but add a timeout cleanup)
     })
 
     observer.observe(contentEl, { childList: true, subtree: true })
-
-    // safety timeout to disconnect observer after 2.5s
     setTimeout(() => observer.disconnect(), 2500)
   }
 }

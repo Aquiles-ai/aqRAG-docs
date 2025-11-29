@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function(e) {
-            
             if (this.getAttribute('target') === '_blank') {
                 return;
             }
@@ -13,17 +12,65 @@ document.addEventListener('DOMContentLoaded', function() {
             loadMarkdown(docName);
 
             document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
-            document.querySelector(`.nav-link[data-doc="${docName}"]`).classList.add('active');
+            this.classList.add('active');
 
-            closeSearch();
+            if (typeof closeSearch === 'function') {
+                closeSearch();
+            }
+
+            const breadcrumb = document.getElementById('breadcrumb-current');
+            if (breadcrumb) {
+                breadcrumb.textContent = this.textContent.trim();
+            }
         });
     });
+
+    cloneMobileNavigation();
 });
 
+function cloneMobileNavigation() {
+    const desktopNav = document.querySelector('nav.lg\\:block');
+    const mobileNavContent = document.getElementById('mobile-nav-content');
+    
+    if (desktopNav && mobileNavContent) {
+        mobileNavContent.innerHTML = desktopNav.innerHTML;
+
+        mobileNavContent.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('target') === '_blank') {
+                    return;
+                }
+
+                e.preventDefault();
+                const docName = this.getAttribute('data-doc');
+                loadMarkdown(docName);
+
+                // Close mobile menu
+                const closeMobileMenu = document.getElementById('close-mobile-menu');
+                if (closeMobileMenu) {
+                    closeMobileMenu.click();
+                }
+
+                document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+                document.querySelectorAll(`.nav-link[data-doc="${docName}"]`).forEach(a => a.classList.add('active'));
+
+                const breadcrumb = document.getElementById('breadcrumb-current');
+                if (breadcrumb) {
+                    breadcrumb.textContent = this.textContent.trim();
+                }
+            });
+        });
+    }
+}
 
 function loadMarkdown(filename) {
     const contentElement = document.getElementById('content');
-    contentElement.innerHTML = '<div class="loading">Loading documentation...</div>';
+    contentElement.innerHTML = `
+        <div class="loading">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mb-4"></div>
+            <p>Loading documentation...</p>
+        </div>
+    `;
     
     fetch(`docs/${filename}.md`)
         .then(response => {
@@ -37,46 +84,109 @@ function loadMarkdown(filename) {
                 gfm: true,
                 breaks: true,
                 highlight: function(code, lang) {
-                    const language = Prism.languages[lang] || Prism.languages.clike;
-                    return Prism.highlight(code, language, lang);
+                    if (Prism.languages[lang]) {
+                        return Prism.highlight(code, Prism.languages[lang], lang);
+                    }
+                    return code;
                 }
             });
 
-            const htmlContent = marked.parse(markdownText);
-            
-            contentElement.innerHTML = htmlContent;
+            const rawHtml = marked.parse(markdownText);
 
-            window.scrollTo(0, 0);
+            const tmp = document.createElement('div');
+            tmp.innerHTML = rawHtml;
+
+            tmp.querySelectorAll('iframe').forEach(iframe => {
+                try {
+                    const src = iframe.getAttribute('src') || '';
+                    const url = new URL(src, location.href);
+                    const host = url.hostname.toLowerCase();
+
+                    const isYouTubeEmbed = (
+                        (host === 'www.youtube.com' || 
+                         host === 'youtube.com' || 
+                         host === 'www.youtube-nocookie.com' || 
+                         host === 'youtube-nocookie.com')
+                        && url.pathname.startsWith('/embed/')
+                    );
+
+                    if (!isYouTubeEmbed) {
+                        iframe.remove();
+                        return;
+                    }
+
+                    iframe.setAttribute('loading', 'lazy');
+                    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                    iframe.setAttribute('allowfullscreen', '');
+                    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'video-wrapper';
+                    iframe.parentNode.insertBefore(wrapper, iframe);
+                    wrapper.appendChild(iframe);
+
+                } catch (err) {
+                    iframe.remove();
+                }
+            });
+
+            const clean = DOMPurify.sanitize(tmp.innerHTML, {
+                ADD_TAGS: ['iframe'],
+                ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'loading', 'referrerpolicy', 'sandbox', 'src', 'width', 'height']
+            });
+
+            contentElement.innerHTML = clean;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             generatePageNavigation();
 
-            indexDocumentContent(filename, markdownText); 
+            if (window.Prism) {
+                Prism.highlightAllUnder(contentElement);
+            }
 
+            if (typeof indexDocumentContent === 'function') {
+                indexDocumentContent(filename, markdownText);
+            }
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
         })
         .catch(error => {
-            console.error('Error al cargar Markdown:', error);
-            contentElement.innerHTML = `<div class="p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                <h2 class="text-xl font-bold mb-2">Error al cargar el documento</h2>
-                <p>No se pudo encontrar el archivo <code>docs/${filename}.md</code>. Por favor, asegúrate de que el archivo existe en la carpeta <code>docs/</code>.</p>
-                <p class="mt-2 text-sm">${error.message}</p>
-            </div>`;
+            console.error('Error loading Markdown:', error);
+            contentElement.innerHTML = `
+                <div class="p-8 bg-red-50 border border-red-200 text-red-700 rounded-xl">
+                    <h2 class="text-xl font-bold mb-2 font-lora">Error loading document</h2>
+                    <p class="mb-2">Could not find file <code class="bg-red-100 px-2 py-1 rounded">docs/${filename}.md</code></p>
+                    <p class="text-sm text-red-600">${error.message}</p>
+                </div>
+            `;
         });
 }
 
 function generatePageNavigation() {
     const contentElement = document.getElementById('content');
     const pageNavLinks = document.getElementById('page-nav');
-    pageNavLinks.innerHTML = ''; 
+    
+    if (!pageNavLinks) return;
+    
+    pageNavLinks.innerHTML = '';
 
     const headings = contentElement.querySelectorAll('h2, h3');
     
     if (headings.length === 0) {
-        pageNavLinks.innerHTML = '<p class="text-sm text-gray-400 p-2">No hay secciones.</p>';
+        pageNavLinks.innerHTML = '<p class="text-sm text-gray-400 italic">No sections available</p>';
         return;
     }
 
     headings.forEach((heading, index) => {
+        // Generate ID if not present
         if (!heading.id) {
-            heading.id = heading.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + index;
+            heading.id = heading.textContent
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') + '-' + index;
         }
         
         const link = document.createElement('a');
@@ -85,27 +195,31 @@ function generatePageNavigation() {
         link.className = 'page-nav-link';
         
         if (heading.tagName === 'H3') {
-            link.style.paddingLeft = '1.5rem';
-            link.style.fontSize = '0.85rem';
+            link.style.paddingLeft = '1rem';
+            link.style.fontSize = '0.8rem';
         }
         
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById(heading.id).scrollIntoView({ behavior: 'smooth' });
+            const target = document.getElementById(heading.id);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             
-            document.querySelectorAll('#page-nav .page-nav-link').forEach(a => a.classList.remove('active'));
+            // Update active state
+            document.querySelectorAll('.page-nav-link').forEach(a => a.classList.remove('active'));
             this.classList.add('active');
         });
         
         pageNavLinks.appendChild(link);
     });
     
-
+    // Intersection Observer for active state
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const id = entry.target.id;
-                document.querySelectorAll('#page-nav .page-nav-link').forEach(a => {
+                document.querySelectorAll('.page-nav-link').forEach(a => {
                     a.classList.remove('active');
                     if (a.getAttribute('href') === '#' + id) {
                         a.classList.add('active');
@@ -113,7 +227,10 @@ function generatePageNavigation() {
                 });
             }
         });
-    }, { threshold: 0.1, rootMargin: '-20% 0px -80% 0px' });
+    }, { 
+        threshold: 0.1, 
+        rootMargin: '-100px 0px -80% 0px' 
+    });
     
     headings.forEach(heading => {
         observer.observe(heading);

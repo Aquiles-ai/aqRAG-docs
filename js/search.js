@@ -1,4 +1,4 @@
-const DOC_FILENAMES = ["index", "installation", "client", "asynclient", "deploy", "api"]
+const DOC_FILENAMES = ["index", "installation", "client", "asynclient", "deploy", "api", "jsclient", "mcp"]
 const docsContent = {}
 let searchIndex = []
 let searchModal = null

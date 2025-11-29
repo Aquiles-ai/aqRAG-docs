@@ -186,18 +186,15 @@ function openSearch() {
         console.error('X Error: Modal de búsqueda no inicializado');
         return;
     }
-
-    searchModal.classList.remove('hidden');
     searchModal.classList.add('flex');
+    searchModal.classList.remove('hidden');
     searchModal.setAttribute('aria-hidden', 'false');
-
     if (searchInput) {
         searchInput.value = '';
         setTimeout(() => searchInput.focus(), 60);
     }
-
     if (searchResults) {
-        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Escribe para empezar a buscar...</p>';
+        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Type to start your search...</p>';
     }
 }
 

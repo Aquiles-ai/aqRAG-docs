@@ -11,6 +11,8 @@ test_deploy.py
 
 > **Example repo:** https://github.com/Aquiles-ai/aquiles-example-deploy
 
+> Note: You can go to [`deploy-example`](https://github.com/Aquiles-ai/Aquiles-RAG/tree/main/deploy-example) or [`docker`](https://github.com/Aquiles-ai/Aquiles-RAG/tree/main/docker) in the main repo to see examples of both Aquiles-RAG and Aquiles-RAG-MCP deployments.
+
 - **requirements.txt**  
 ```
 
@@ -163,6 +165,9 @@ aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 2 deploy_redis.py
 
 # Qdrant example
 aquiles-rag deploy --host "0.0.0.0" --port 5500 --workers 2 deploy_qdrant.py
+
+# MCP Example (the deployment is only compatible with SSE transport, and you can reuse the configuration files for Aquiles-RAG REST-API for added convenience.)
+aquiles-rag deploy-mcp --host "0.0.0.0" --port 5500 deploy_redis.py
 ```
 
 What the command does:

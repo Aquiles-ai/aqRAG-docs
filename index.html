@@ -398,7 +398,7 @@
         </div>
     </div>
 
-    <div class="flex">
+    <div class="flex flex-1">
         <!-- Sidebar -->
         <nav class="hidden lg:block w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200 fixed h-full overflow-y-auto" style="top: 64px;">
             <div class="p-6 space-y-6">
@@ -453,8 +453,8 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-1 relative z-10">
-            <div class="lg:ml-80 xl:mr-64">
+        <main class="flex-1 relative z-10 flex flex-col">
+            <div class="lg:ml-80 xl:mr-64 flex-1">
                 <div class="max-w-4xl mx-auto px-6 py-8 pb-0">
                     <div id="content" class="content bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 lg:p-12 mb-8">
                         <div class="loading">Loading documentation...</div>
@@ -474,7 +474,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="relative z-20 bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-auto">
+    <footer class="relative z-20 bg-white/80 backdrop-blur-sm border-t border-gray-200">
         <div class="lg:ml-80 xl:mr-64">
             <div class="max-w-4xl mx-auto px-6 py-8">
                 <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8">
@@ -484,7 +484,6 @@
                     </a>
                 </div>
                 <div class="text-center mt-6">
-                    <p class="font-bold font-lora text-gray-900 mb-2">Aquiles-RAG <span class="text-purple-600">Documentation</span></p>
                     <p class="text-sm text-gray-500 font-inter">Powerful Retrieval-Augmented Generation system</p>
                 </div>
             </div>

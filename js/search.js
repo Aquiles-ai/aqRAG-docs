@@ -14,7 +14,7 @@ function initSearch() {
 function createSearchModal() {
     // Create modal element with Tailwind classes
     searchModal = document.createElement('div');
-    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 top-1';
+    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4';
     searchModal.setAttribute('aria-hidden', 'true');
 
     const modalContent = document.createElement('div');

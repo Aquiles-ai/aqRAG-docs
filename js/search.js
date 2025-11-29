@@ -12,44 +12,65 @@ function initSearch() {
 }
 
 function createSearchModal() {
-    // Create modal element with Tailwind classes
-    searchModal = document.createElement('div');
-    searchModal.className = 'fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4';
-    searchModal.setAttribute('aria-hidden', 'true');
+  // Create modal element with Tailwind classes
+  searchModal = document.createElement("div")
+  searchModal.className = "fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
+  searchModal.setAttribute("aria-hidden", "true")
 
-    const modalContent = document.createElement('div');
-    modalContent.className = 'w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden';
-    modalContent.innerHTML = `
+  const modalContent = document.createElement("div")
+  modalContent.className = "w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden"
+  modalContent.innerHTML = `
         <div class="p-4 border-b border-gray-100 flex items-center gap-3">
             <input type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 search-modal-input" placeholder="Search for documentation...">
             <button type="button" class="px-3 py-1 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 search-close-btn">Esc</button>
         </div>
         <div class="max-h-80 overflow-y-auto p-4 search-results bg-white"></div>
-    `;
+    `
 
-    searchModal.appendChild(modalContent);
-    document.body.appendChild(searchModal);
+  // Append modal content to the searchModal
+  searchModal.appendChild(modalContent)
 
-    // Hook elements
-    searchInput = searchModal.querySelector('.search-modal-input');
-    searchResults = searchModal.querySelector('.search-results');
+  // Append searchModal to the body
+  document.body.appendChild(searchModal)
 
-    // Close button
-    searchModal.querySelector('.search-close-btn').addEventListener('click', () => closeSearch());
+  // Add event listener for closing the modal
+  const closeButton = modalContent.querySelector(".search-close-btn")
+  closeButton.addEventListener("click", () => {
+    searchModal.classList.add("hidden")
+  })
 
-    // Click outside to close
-    searchModal.addEventListener('click', function (e) {
-        if (e.target === searchModal) closeSearch();
-    });
+  // Add event listener for search input
+  const searchInput = modalContent.querySelector(".search-modal-input")
+  searchInput.addEventListener("input", (event) => {
+    const query = event.target.value
+    // Implement search functionality here
+    const resultsContainer = modalContent.querySelector(".search-results")
+    resultsContainer.innerHTML = "" // Clear previous results
+    if (query) {
+      // Filter and display results based on query
+      const results = filterResults(query)
+      results.forEach((result) => {
+        const resultElement = document.createElement("div")
+        resultElement.className = "p-2 hover:bg-gray-100"
+        resultElement.textContent = result.title
+        resultsContainer.appendChild(resultElement)
+      })
+    }
+  })
 
-    // Enter & navigation handling inside input
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-        }
-    });
+  // Function to filter results based on query
+  function filterResults(query) {
+    // Implement filtering logic here
+    // Example: return a list of results that match the query
+    return [
+      { title: "Documentation 1" },
+      { title: "Documentation 2" },
+      // Add more results as needed
+    ].filter((result) => result.title.toLowerCase().includes(query.toLowerCase()))
+  }
 
-    // Add a minimal highlight style using Tailwind-compatible classes produced inline
+  // Show the modal
+  searchModal.classList.remove("hidden")
 }
 
 function setupEventListeners() {

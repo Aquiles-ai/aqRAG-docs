@@ -1,6 +1,6 @@
 # Welcome to Aquiles-RAG Documentation
 
-Aquiles-RAG is a high-performance Retrieval-Augmented Generation (RAG) service built to work with **Redis, Qdrant, or PostgreSQL** as the vector database backend, and FastAPI as the API layer. This documentation site will help you get started, configure your environment, use the CLI & Python client, deploy to production, and explore the full API surface.
+Aquiles-RAG is a high-performance Retrieval-Augmented Generation (RAG) service built to work with **Redis, Qdrant, or PostgreSQL** as the vector database backend, and FastAPI as the API layer. This documentation site will help you get started, configure your environment, use the CLI & Python client, deploy to production, and explore the full API surface. (Please adjust your browser zoom to 75% to view all content correctly.)
 
 ## 📚 Table of Contents
 

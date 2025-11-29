@@ -37,9 +37,6 @@ function createSearchModal() {
     searchModal.querySelector('.search-close-btn').addEventListener('click', closeSearch);
 }
 
-/**
- * Configura los event listeners para abrir/cerrar el modal y buscar.
- */
 function setupEventListeners() {
     const openDesktop = document.getElementById('open-search-desktop');
     const openMobile = document.getElementById('open-search-mobile');
@@ -47,7 +44,6 @@ function setupEventListeners() {
     if (openDesktop) openDesktop.addEventListener('click', openSearch);
     if (openMobile) openMobile.addEventListener('click', openSearch);
 
-    // Atajo de teclado (Ctrl+K)
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
@@ -61,12 +57,10 @@ function setupEventListeners() {
         }
     });
 
-    // Búsqueda en tiempo real
     if (searchInput) {
         searchInput.addEventListener('input', runSearch);
     }
 
-    // Cerrar al hacer clic fuera del modal
     if (searchModal) {
         searchModal.addEventListener('click', function(e) {
             if (e.target === searchModal) {
@@ -76,9 +70,6 @@ function setupEventListeners() {
     }
 }
 
-/**
- * Carga todos los archivos Markdown y construye el índice de búsqueda.
- */
 function loadAllDocuments() {
     console.log(`Indexando ${DOC_FILENAMES.length} documentos...`);
     
@@ -102,9 +93,6 @@ function loadAllDocuments() {
     });
 }
 
-/**
- * Procesa el texto Markdown de un archivo para construir el índice de secciones.
- */
 function indexDocumentContent(filename, markdownText) {
     const h1Match = markdownText.match(/^#\s+(.*)/m);
     const documentTitle = h1Match ? h1Match[1].trim() : filename.charAt(0).toUpperCase() + filename.slice(1);
@@ -156,9 +144,6 @@ function indexDocumentContent(filename, markdownText) {
     }
 }
 
-/**
- * Muestra el modal de búsqueda y enfoca la entrada.
- */
 function openSearch() {
     if (!searchModal) {
         console.error('X Error: Modal de búsqueda no inicializado');
@@ -174,17 +159,13 @@ function openSearch() {
     }
 }
 
-/**
- * Oculta el modal de búsqueda.
- */
+
 function closeSearch() {
     if (!searchModal) return;
     searchModal.style.display = 'none';
 }
 
-/**
- * Ejecuta la búsqueda en el índice en memoria.
- */
+
 function runSearch() {
     if (!searchInput || !searchResults) return;
     
@@ -192,22 +173,19 @@ function runSearch() {
     searchResults.innerHTML = '';
 
     if (query.length < 2) {
-        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Escribe al menos 2 caracteres.</p>';
+        searchResults.innerHTML = '<p class="text-gray-500 p-4 text-center">Write at least 2 characters.</p>';
         return;
     }
 
     const matchedResults = searchIndex.filter(item => item.content.includes(query));
 
     if (matchedResults.length === 0) {
-        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No se encontraron resultados para "${searchInput.value}".</p>`;
+        searchResults.innerHTML = `<p class="text-gray-500 p-4 text-center">No results were found for "${searchInput.value}".</p>`;
     } else {
         renderResults(matchedResults, query);
     }
 }
 
-/**
- * Renderiza los resultados de búsqueda en el modal.
- */
 function renderResults(results, query) {
     if (!searchResults) return;
     
@@ -246,9 +224,6 @@ function renderResults(results, query) {
     });
 }
 
-/**
- * Navega a un documento y desplaza la vista al encabezado de la sección.
- */
 function navigateToResult(filename, title) {
     if (typeof loadMarkdown === 'function') {
         loadMarkdown(filename);
@@ -264,7 +239,6 @@ function navigateToResult(filename, title) {
     }
 }
 
-// Inicializar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSearch);
 } else {

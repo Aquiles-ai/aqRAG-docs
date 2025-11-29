@@ -267,18 +267,15 @@
 
 <body class="bg-cream-50 text-gray-900 min-h-screen font-inter selection:bg-purple-100 selection:text-purple-900">
     
-    <!-- Background Effects -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-300/20 rounded-full blur-3xl animate-float gpu-accelerated"></div>
         <div class="absolute top-[40%] right-[-10%] w-[400px] h-[400px] bg-purple-400/20 rounded-full blur-3xl animate-float-delayed gpu-accelerated"></div>
         <div class="absolute bottom-[-10%] left-[20%] w-[600px] h-[600px] bg-indigo-300/20 rounded-full blur-3xl animate-float-slow gpu-accelerated"></div>
     </div>
 
-    <!-- Header -->
     <header class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 transition-all duration-300" id="main-header">
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo & Mobile Menu -->
                 <div class="flex items-center space-x-4">
                     <button id="mobile-menu-button" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors">
                         <i data-lucide="menu" class="w-6 h-6"></i>
@@ -311,23 +308,20 @@
                     <button id="open-search-mobile" class="md:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                         <i data-lucide="search" class="w-5 h-5"></i>
                     </button>
-                    <a href="https://github.com/Aquiles-ai" target="_blank" class="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="GitHub">
+                    <a href="https://github.com/Aquiles-ai/Aquiles-RAG" target="_blank" class="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="GitHub">
                         <i data-lucide="github" class="w-5 h-5"></i>
                     </a>
                     <div class="h-6 w-px bg-gray-200 mx-2 hidden sm:block"></div>
-                    <span class="text-xs font-mono text-purple-600 bg-purple-50 px-2 py-1 rounded-md hidden sm:block">v1.0.2</span>
+                    <span class="text-xs font-mono text-purple-600 bg-purple-50 px-2 py-1 rounded-md hidden sm:block">v0.5.0</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Layout Container -->
     <div class="flex pt-16 max-w-8xl mx-auto">
-        
-        <!-- Sidebar -->
+
         <nav class="hidden lg:block w-72 fixed h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-200 bg-white/50 backdrop-blur-sm pb-10 z-40 custom-scrollbar">
             <div class="p-6 space-y-8">
-                <!-- Navigation Structure -->
                 <div class="nav-group">
                     <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 font-inter">Getting Started</h5>
                     <div class="space-y-1">
@@ -372,10 +366,8 @@
             </div>
         </nav>
 
-        <!-- Main Content -->
         <main class="flex-1 lg:ml-72 xl:mr-64 min-w-0 z-10 relative">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
-                <!-- Breadcrumbs -->
                 <nav class="flex mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
                     <ol class="flex items-center space-x-2">
                         <li><span class="text-gray-400">Docs</span></li>
@@ -384,7 +376,6 @@
                     </ol>
                 </nav>
 
-                <!-- Dynamic Content Container -->
                 <div id="content" class="content bg-white/70 backdrop-blur-sm rounded-3xl shadow-sm border border-white/50 p-8 lg:p-12 animate-fade-in ring-1 ring-gray-900/5 min-h-[500px]">
                     <div class="loading">
                         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mb-4"></div>
@@ -392,30 +383,26 @@
                     </div>
                 </div>
 
-                <!-- Footer -->
                 <div class="mt-16 pt-8 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
                     <p>&copy; 2025 Aquiles-ai</p>
                     <div class="flex space-x-6 mt-4 sm:mt-0">
-                        <a href="https://github.com/Aquiles-ai" class="hover:text-purple-600 transition-colors">GitHub</a>
-                        <a href="#" class="hover:text-purple-600 transition-colors">Issues</a>
-                        <a href="#" class="hover:text-purple-600 transition-colors">Community</a>
+                        <a href="https://github.com/Aquiles-ai/Aquiles-RAG" class="hover:text-purple-600 transition-colors">GitHub</a>
+                        <a href="https://github.com/Aquiles-ai/Aquiles-RAG/issues" class="hover:text-purple-600 transition-colors">Issues</a>
+                        <a href="https://github.com/Aquiles-ai" class="hover:text-purple-600 transition-colors">Community</a>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Table of Contents -->
         <aside class="hidden xl:block w-64 fixed right-0 h-[calc(100vh-4rem)] overflow-y-auto z-30 pt-8 pr-8 custom-scrollbar">
             <div class="p-4 border-l border-gray-200">
                 <h6 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 font-inter">On this page</h6>
                 <nav id="page-nav" class="space-y-2">
-                    <!-- JS will populate this -->
                 </nav>
             </div>
         </aside>
     </div>
 
-    <!-- Mobile Menu Overlay -->
     <div id="mobile-menu" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-900/20 backdrop-blur-sm transition-opacity opacity-0" id="mobile-backdrop"></div>
         <div class="fixed inset-y-0 left-0 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col" id="mobile-panel">
@@ -431,7 +418,6 @@
         </div>
     </div>
 
-    <!-- Libraries (Load First) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -440,18 +426,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Application Initialization -->
     <script>
-        // Esperar a que todas las librerías estén cargadas
         function initializeApp() {
-            // Verificar que las librerías necesarias estén disponibles
             if (typeof marked === 'undefined' || typeof Prism === 'undefined' || typeof lucide === 'undefined') {
                 console.error('X Error: Librerías no cargadas correctamente');
                 setTimeout(initializeApp, 100);
                 return;
             }
 
-            // Configurar marked
             marked.setOptions({
                 gfm: true,
                 breaks: true,
@@ -461,18 +443,15 @@
                 }
             });
 
-            // Inicializar iconos de Lucide
             lucide.createIcons();
         }
 
-        // Iniciar cuando el DOM esté listo
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
             initializeApp();
         }
 
-        // Mobile Menu Toggle
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuBtn = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
